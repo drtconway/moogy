@@ -46,7 +46,7 @@ export class Normal implements Distribution {
       }
     } else {
       if (log) {
-          if (z0 < -5.4) {
+          if (z0 < -4) {
             let q = 0.5 * erfc(-z0);
             return Math.log1p(-q);
           }
@@ -89,7 +89,7 @@ export class Normal implements Distribution {
       w = u * u + v * v;
     }
     let z = Math.sqrt((-2 * Math.log(w)) / w);
-    this.randomBuffer.push(u * z);
-    this.randomBuffer.push(v * z);
+    this.randomBuffer.push(u * z * this.sigma + this.mu);
+    this.randomBuffer.push(v * z * this.sigma + this.mu);
   }
 }

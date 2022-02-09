@@ -90,3 +90,20 @@ export function ldexp(mantissa: number, exponent: number): number {
   }
   return result;
 }
+
+export function correlation(xs : number[], ys: number[]) : number {
+    let sx = 0;
+    let s2x = 0;
+    let sy = 0;
+    let s2y = 0;
+    let sxy = 0;
+    let n = xs.length;
+    for (let i = 0; i < n; ++i) {
+        sx += xs[i];
+        s2x += xs[i]*xs[i];
+        sy += ys[i];
+        s2y += ys[i]*ys[i];
+        sxy += xs[i]*ys[i];
+    }
+    return (n * sxy - sx*sy) / (Math.sqrt(n*s2x - sx*sx)*Math.sqrt(n*s2y - sy*sy));
+}

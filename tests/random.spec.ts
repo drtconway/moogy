@@ -1,4 +1,5 @@
-import { MT19937 } from "../src/random";
+import { correlation } from "../src/internal/utils";
+import { MT19937, RandomTools } from "../src/random";
 
 describe("basic randoms", () => {
   let R = new MT19937(19);
@@ -35,4 +36,19 @@ describe("basic randoms", () => {
       expect(c).toBeGreaterThan(0);
     }
   });
+});
+
+describe("random utilities", () => {
+    let R = new MT19937(19);
+    it("shuffle", () => {
+        let xs = [];
+        for (let i = 0; i < 100; ++i) {
+            xs.push(i);
+        }
+        let ys = [...xs];
+        let U = new RandomTools(R);
+        U.shuffle(ys);
+        let r = correlation(xs, ys);
+        expect(r).toBeLessThan(0.3);
+    });
 });
