@@ -7,6 +7,10 @@ export interface CdfOptions {
     log?: boolean;
 };
 
+export interface RandomSource {
+    random: () => number;
+};
+
 export interface Distribution {
     name: string;
 
@@ -14,7 +18,7 @@ export interface Distribution {
 
     cdf(x : number, options: CdfOptions) : number;
 
-    random() : number;
-    random(n: number) : number[];
+    random(rng: RandomSource) : number;
+    random(rng: RandomSource, n: number) : number[];
 
 };

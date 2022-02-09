@@ -1,4 +1,4 @@
-import { Distribution, PdfOptions, CdfOptions } from "./distribution";
+import { Distribution, PdfOptions, CdfOptions, RandomSource } from "./distribution";
 import { logChoose, logAdd } from "./internal/utils";
 
 export class Binomial implements Distribution {
@@ -57,10 +57,9 @@ export class Binomial implements Distribution {
         }
     }
 
-
-    random() : number;
-    random(n: number) : number[];
-    random(n?: number) : number | number[] {
+    random(rng: RandomSource) : number;
+    random(rng: RandomSource, n: number) : number[];
+    random(rng: RandomSource, n?: number) : number | number[] {
         if (n == null) {
             return 0;
         } else {

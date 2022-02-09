@@ -1,6 +1,7 @@
 #include <boost/math/distributions/beta.hpp>
 #include <boost/math/distributions/binomial.hpp>
 #include <boost/math/distributions/chi_squared.hpp>
+#include <boost/math/distributions/normal.hpp>
 #include <boost/multiprecision/cpp_bin_float.hpp>
 #include <docopt/docopt.h>
 #include <iostream>
@@ -98,17 +99,17 @@ void main_binom() {
 void main_erf() {
   nlohmann::json tests;
   auto makeItem = [&](double z) {
-      double xp = double(erf(Real(z)));
-      xp = std::max(xp, -1.0);
-      xp = std::min(xp, 1.0);
-      double yp = double(erfc(Real(z)));
-      yp = std::max(yp, 0.0);
-      yp = std::min(yp, 2.0);
-      nlohmann::json itm;
-      itm["z"] = z;
-      itm["erf"] = xp;
-      itm["erfc"] = yp;
-      tests.push_back(itm);
+    double xp = double(erf(Real(z)));
+    xp = std::max(xp, -1.0);
+    xp = std::min(xp, 1.0);
+    double yp = double(erfc(Real(z)));
+    yp = std::max(yp, 0.0);
+    yp = std::min(yp, 2.0);
+    nlohmann::json itm;
+    itm["z"] = z;
+    itm["erf"] = xp;
+    itm["erfc"] = yp;
+    tests.push_back(itm);
   };
   for (double lz = -25; lz <= 25; lz += 0.5) {
     double z = std::exp(lz);
@@ -148,10 +149,58 @@ void main_frexp() {
   std::cout << tests << std::endl;
 }
 
+nlohmann::json norm(const double mu, const double sigma, uint64_t s) {
+  using namespace boost::math;
+  normal_distribution<Real> nd(mu, sigma);
+  nlohmann::json res;
+  res["distribution"] = "normal";
+  res["mu"] = mu;
+  res["sigma"] = sigma;
+  res["values"] = nlohmann::json::array();
+
+  auto make = [&](double x) {
+    nlohmann::json itm;
+    itm["z"] = x;
+    itm["pdf"] = double(pdf(nd, x));
+    itm["pdf.log"] = double(log(pdf(nd, x)));
+    itm["cdf.lower"] = double(cdf(nd, x));
+    itm["cdf.lower.log"] = double(log(cdf(nd, x)));
+    itm["cdf.upper"] = double(cdf(complement(nd, x)));
+    itm["cdf.upper.log"] = double(log(cdf(complement(nd, x))));
+    res["values"].push_back(itm);
+  };
+
+  std::mt19937 rng{uint64_t(s)};
+  std::uniform_real_distribution<double> U(-8 * sigma, +8 * sigma);
+  std::vector<double> zs;
+  for (double z = -2; z <= 2; z += 0.125) {
+      zs.push_back(z*sigma + mu);
+  }
+  for (size_t i = 0; i < 10; ++i) {
+    zs.push_back(U(rng) + mu);
+  }
+  std::sort(zs.begin(), zs.end());
+  for (auto itr = zs.begin(); itr != zs.end(); ++itr) {
+    make(*itr);
+  }
+
+  return res;
+}
+
+void main_norm() {
+  nlohmann::json tests;
+  tests.push_back(norm(0, 1, 23));
+  tests.push_back(norm(25, 25, 24));
+  tests.push_back(norm(1e-3, 1e-4, 25));
+  tests.push_back(norm(1e2, 1e3, 26));
+  std::cout << tests << std::endl;
+}
+
 std::map<std::string, std::function<void()>> dists{
     {"binomial", main_binom},
     {"erf", main_erf},
     {"frexp", main_frexp},
+    {"norm", main_norm}
 };
 
 int main(int argc, const char *argv[]) {
