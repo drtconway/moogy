@@ -4,6 +4,7 @@ import { addHelpers } from "./helpers";
 addHelpers();
 
 import { readFileSync } from "fs";
+import { MT19937 } from "../src/random";
 
 const S: number = 1.0;
 
@@ -65,4 +66,26 @@ describe("normal lower cdf", () => {
       });
     }
   }
+});
+
+describe("normal randoms", () => {
+    let R = new MT19937(37);
+    it("basic test", () => {
+        let Nd = new Normal(0, 1);
+        let n = 0;
+        let s = 0;
+        let s2 = 0;
+        for (let i = 0; i < 4000; ++i) {
+            let u = Nd.random(R);
+            n += 1;
+            s += u;
+            s2 += u*u;
+        }
+        let m = s/n;
+        let sd = Math.sqrt(s2/n - m*m);
+        expect(m).toBeGreaterThan(-0.005);
+        expect(m).toBeLessThan(0.005)
+        expect(sd).toBeGreaterThan(0.98);
+        expect(sd).toBeLessThan(1.02);
+    });    
 });

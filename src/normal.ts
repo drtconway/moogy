@@ -86,6 +86,7 @@ export class Normal implements Distribution {
     while (w > 1) {
       u = 2 * rng.random() - 1;
       v = 2 * rng.random() - 1;
+      w = u * u + v * v;
     }
     let z = Math.sqrt((-2 * Math.log(w)) / w);
     this.randomBuffer.push(u * z);

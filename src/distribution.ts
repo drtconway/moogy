@@ -14,9 +14,9 @@ export interface RandomSource {
 export interface Distribution {
     name: string;
 
-    pdf(x : number, options: PdfOptions) : number;
+    pdf(x : number, options?: PdfOptions) : number;
 
-    cdf(x : number, options: CdfOptions) : number;
+    cdf(x : number, options?: CdfOptions) : number;
 
     random(rng: RandomSource) : number;
     random(rng: RandomSource, n: number) : number[];
