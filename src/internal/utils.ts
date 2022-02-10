@@ -175,3 +175,17 @@ export function contFracB(g : () => [number, number], factor: number, maxTerms: 
     }
     return f;
 }
+
+export function sumSeries(g : () => number, factor: number, maxTerms: number = 20, initValue = 0) : number {
+    let res = initValue;
+    let counter = maxTerms;
+    while (counter > 0) {
+        let t = g();
+        res += t;
+        if (Math.abs(factor*res) > Math.abs(t)) {
+            break;
+        }
+        counter -= 1;
+    }
+    return res;
+}

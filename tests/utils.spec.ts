@@ -1,5 +1,5 @@
 import { readFileSync } from "fs";
-import { choose, factorial, logChoose, logFactorial, poly, frexp, ldexp, contFracA, contFracB } from "../src/internal/utils";
+import { choose, factorial, logChoose, logFactorial, poly, frexp, ldexp, contFracA, contFracB, sumSeries } from "../src/internal/utils";
 
 import { addHelpers } from "./helpers";
 addHelpers();
@@ -213,5 +213,27 @@ describe("continued fraction type B", () => {
 
     it("tan", () => {
         expect(myTan(0.35)).toBeRelativelyCloseTo(Math.tan(0.35));
+    });
+});
+
+describe("series summation", () => {
+    const log1pTerms = (x : number) : () => number => {
+        let k = 0;
+        let m = -x;
+        let p = -1;
+        return () => {
+            p *= m;
+            k += 1;
+            return p/k;
+        };
+    };
+    
+    const myLog1p = (x : number) : number => {
+        return sumSeries(log1pTerms(x), 1e-20, 1000);
+    };
+
+    it("log1p", () => {
+        expect(myLog1p(0.5)).toBeRelativelyCloseTo(Math.log1p(0.5));
+        expect(myLog1p(-0.5)).toBeRelativelyCloseTo(Math.log1p(-0.5));
     });
 });
