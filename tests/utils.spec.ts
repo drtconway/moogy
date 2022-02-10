@@ -1,5 +1,5 @@
 import { readFileSync } from "fs";
-import { choose, factorial, logChoose, logFactorial, poly, frexp, ldexp } from "../src/internal/utils";
+import { choose, factorial, logChoose, logFactorial, poly, frexp, ldexp, contFracA, contFracB } from "../src/internal/utils";
 
 import { addHelpers } from "./helpers";
 addHelpers();
@@ -169,4 +169,49 @@ describe("frexp & ldexp", () => {
       expect(ldexp(test.mantissa, test.exponent)).toBeRelativelyCloseTo(test.value, 14);
     });
   }
+});
+
+describe("continued fraction type A", () => {
+    const uigTerms = (a1 : number, z1: number) : () => [number, number] => {
+        let z = z1 - a1 + 1;
+        let a = a1;
+        let k = 0;
+        return () => {
+            k += 1;
+            z += 2;
+            return [k*(a - k), z];
+        };
+    };
+
+    const gammaQ = (a : number, z : number) : number => {
+        return (z**a) /(Math.exp(z) * (z - a + 1 + contFracA(uigTerms(a, z), 1e-20, 40)));
+    }
+    it("gammaQ", () => {
+        expect(gammaQ(3, 3)).toBeRelativelyCloseTo(0.8463801622536870628011);
+        expect(gammaQ(4, 3)).toBeRelativelyCloseTo(3.883391332693387099084);
+    });
+});
+
+describe("continued fraction type B", () => {
+    it("golden ratio", () => {
+        let terms : () => [number, number] = () => [1, 1];
+        expect(contFracB(terms, 1e-15, 40)).toBeRelativelyCloseTo((1 + Math.sqrt(5))/2);
+    });
+
+    const tanTerms = (theta: number) : () => [number, number] => {
+        let a = -theta * theta;
+        let b = -1;
+        return () => {
+            b += 2;
+            return [a, b];
+        };
+    };
+
+    const myTan = (theta: number) : number => {
+        return theta / contFracB(tanTerms(theta), 1e-15, 40);
+    };
+
+    it("tan", () => {
+        expect(myTan(0.35)).toBeRelativelyCloseTo(Math.tan(0.35));
+    });
 });

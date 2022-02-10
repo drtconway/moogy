@@ -107,3 +107,71 @@ export function correlation(xs : number[], ys: number[]) : number {
     }
     return (n * sxy - sx*sy) / (Math.sqrt(n*s2x - sx*sx)*Math.sqrt(n*s2y - sy*sy));
 }
+
+export function contFracA(g : () => [number, number], factor: number, maxTerms: number = 20) : number {
+    const tiny = 1e-300;
+    const terminator = Math.abs(factor);
+
+    let v = g();
+    let a0 = v[0];
+    let f = v[1];
+    if (f == 0) {
+        f = tiny;
+    }
+    let C = f;
+    let D = 0;
+    let counter = maxTerms;
+    while (counter > 0) {
+        v = g();
+        D = v[1] + v[0]*D;
+        if (D == 0) {
+            D = tiny;
+        }
+        C = v[1] + v[0]/C;
+        if (C == 0) {
+            C = tiny;
+        }
+        D = 1/D;
+        let delta = C*D;
+        f *= delta;
+        if (Math.abs(delta - 1) < terminator) {
+            break;
+        }
+        counter -= 1;
+    }
+    return a0/f;
+}
+
+export function contFracB(g : () => [number, number], factor: number, maxTerms: number = 20) : number {
+    const tiny = 1e-300;
+    const terminator = Math.abs(factor);
+
+    let v = g();
+    let f = v[1];
+    if (f == 0) {
+        f = tiny;
+    }
+    let C = f;
+    let D = 0;
+
+    let counter = maxTerms;
+    while (counter > 0) {
+        v = g();
+        D = v[1] + v[0] * D;
+        if (D == 0) {
+            D = tiny;
+        }
+        C = v[1] + v[0]/C;
+        if (C == 0) {
+            C = tiny;
+        }
+        D = 1/D;
+        let delta = C*D;
+        f *= delta;
+        if (Math.abs(delta - 1) < terminator) {
+            break;
+        }
+        counter -= 1;
+    }
+    return f;
+}
