@@ -1,4 +1,4 @@
-import { gamma, scaledGamma, sinpx } from "../src/special/gamma";
+import { gamma, logGamma, scaledGamma, sinpx } from "../src/special/gamma";
 
 import { addHelpers } from "./helpers";
 addHelpers();
@@ -52,4 +52,32 @@ describe("gamma special values", () => {
   it("Γ(17/16) = 0.9675800675995248847599762987154317516646", () => {
     expect(gamma(17 / 16)).toBeRelativelyCloseTo(0.9675800675995248847599762987154317516646, 15);
   });
+});
+
+describe("log gamma special values", () => {
+    it("log Γ(n) for small integers", () => {
+        expect(logGamma(1)).toBe(0);
+        expect(logGamma(2)).toBe(0);
+        expect(logGamma(3)).toBeRelativelyCloseTo(Math.log(2));
+        expect(logGamma(4)).toBeRelativelyCloseTo(Math.log(6));
+        expect(logGamma(5)).toBe(Math.log(24));
+      });
+      it("log Γ(1/2) = log sqrt(π)", () => {
+        expect(logGamma(1 / 2)).toBeRelativelyCloseTo(Math.log(Math.sqrt(Math.PI)), 15);
+      });
+      it("log Γ(3/2) = log (sqrt(π)/2)", () => {
+        expect(logGamma(3 / 2)).toBeRelativelyCloseTo(Math.log(Math.sqrt(Math.PI) / 2), 14);
+      });
+      it("log Γ(-3/2) = log (4/3 * sqrt(π))", () => {
+        expect(logGamma(-3 / 2)).toBeRelativelyCloseTo(Math.log(4/3 * Math.sqrt(Math.PI)), 15);
+      });
+      it("log Γ(5/2) = log (3/4 * sqrt(π))", () => {
+        expect(logGamma(5 / 2)).toBeRelativelyCloseTo(Math.log(0.75 * Math.sqrt(Math.PI)), 14);
+      });
+      it("log Γ(1/5) = log 4.590843711998803053204758275929152", () => {
+        expect(logGamma(1 / 5)).toBeRelativelyCloseTo(Math.log(4.590843711998803053204758275929152), 14);
+      });
+      it("log Γ() = log 4.590843711998803053204758275929152", () => {
+        expect(logGamma(1 / 5)).toBeRelativelyCloseTo(Math.log(4.590843711998803053204758275929152), 14);
+      });
 });
