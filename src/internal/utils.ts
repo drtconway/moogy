@@ -67,6 +67,10 @@ export function poly(P: readonly number[], z: number): number {
   return s;
 }
 
+export function polyEven(P: readonly number[], z: number) : number {
+    return poly(P, z*z);
+}
+
 export function frexp(value: number): [number, number] {
   if (value === 0) return [value, 0];
   const data = new DataView(new ArrayBuffer(8));

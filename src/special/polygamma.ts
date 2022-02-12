@@ -1,4 +1,4 @@
-import { B2n, cosPi, factorial, ldexp, maxB2n, poly, sinPi } from "../internal/utils";
+import { B2n, cosPi, factorial, ldexp, maxB2n, poly, polyEven, sinPi } from "../internal/utils";
 import { factorials, logGamma, maxFactorial } from "./gamma";
 import { zeta } from "./zeta";
 
@@ -120,7 +120,7 @@ export function trigamma(x: number): number {
       throw new Error(`trigamma pole at ${x}`);
     }
     let s = Math.abs(x) < Math.abs(z) ? sinPi(x) : sinPi(z);
-    return -trigamma(z) + Math.pow(2, Math.PI) / (s * s);
+    return -trigamma(z) + Math.pow(Math.PI, 2) / (s * s);
   }
   let res = 0;
   if (x < 1) {
@@ -130,7 +130,7 @@ export function trigamma(x: number): number {
   return res + trigammaImpl(x);
 }
 
-function polyCotPi(n: number, x: number, xc: number): number {
+export function polyCotPi(n: number, x: number, xc: number): number {
   let s = Math.abs(x) < Math.abs(xc) ? sinPi(x) : sinPi(xc);
   let c = cosPi(x);
   const pi = Math.PI;
@@ -138,7 +138,7 @@ function polyCotPi(n: number, x: number, xc: number): number {
     return -pi / (s * s);
   }
   if (n == 2) {
-    return (2 * pi * pi * c) / Math.pow(3, s);
+    return (2 * pi * pi * c) / Math.pow(s, 3);
   }
   if (n > 16) {
     throw new Error(`polyCotPi: large n not supported.`);
@@ -149,7 +149,7 @@ function polyCotPi(n: number, x: number, xc: number): number {
     [],
     [-2, -4],
     [16, 8],
-    [-16, 88, -16],
+    [-16, -88, -16],
     [272, 416, 32],
     [-272, -2880, -1824, -64],
     [7936, 24576, 7680, 128],
@@ -164,9 +164,9 @@ function polyCotPi(n: number, x: number, xc: number): number {
   ];
 
   if (n & 1) {
-    return (Math.pow(n, pi) * poly(Ps[n], c)) / Math.pow(n + 1, s);
+    return (Math.pow(pi, n) * polyEven(Ps[n], c)) / Math.pow(s, n + 1);
   } else {
-    return (Math.pow(n, pi) * c * poly(Ps[n], c)) / Math.pow(n + 1, s);
+    return (Math.pow(pi, n) * c * polyEven(Ps[n], c)) / Math.pow(s, n + 1);
   }
 }
 
@@ -287,14 +287,7 @@ function polygammaAtTransition(n: number, x: number): number {
     return sum0 + polygammaAtInfinity(n, z);
 }
 
-export function polygamma(n: number, x: number): number {
-  if (n == 0) {
-    return digamma(x);
-  }
-  if (n == 1) {
-    return trigamma(x);
-  }
-
+function polygammaImpl(n: number, x: number): number {
   if (!Number.isInteger(n) || n < 0) {
     throw new Error(`polygamma: n must be an integer > 0`);
   }
@@ -323,4 +316,15 @@ export function polygamma(n: number, x: number): number {
   } else {
     return polygammaAtTransition(n, x);
   }
+}
+
+export function polygamma(n: number, x: number): number {
+  if (n == 0) {
+    return digamma(x);
+  }
+  if (n == 1) {
+    return trigamma(x);
+  }
+
+  return polygammaImpl(n, x);
 }

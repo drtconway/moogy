@@ -198,6 +198,25 @@ void main_norm() {
   std::cout << tests << std::endl;
 }
 
+void main_polygamma() {
+  nlohmann::json tests;
+  for (int n = 0; n <= 10; ++n) {
+      for (Real z10 = -250; z10 <= 150; z10 += 2) {
+          Real z = z10/10;
+          if (z <= 0 && floor(z) == z) {
+              continue;
+          }
+        nlohmann::json itm;
+        Real r = boost::math::polygamma(n, z);
+        itm["n"] = n;
+        itm["z"] = double(z);
+        itm["polygamma"] = double(r);
+        tests.push_back(itm);
+      }
+  }
+  std::cout << tests << std::endl;
+}
+
 void main_zeta() {
   nlohmann::json tests;
   for (Real s = -250; s <= 150; s += 2) {
@@ -218,6 +237,7 @@ std::map<std::string, std::function<void()>> dists{
     {"erf", main_erf},
     {"frexp", main_frexp},
     {"norm", main_norm},
+    {"polygamma", main_polygamma },
     {"zeta", main_zeta}
 };
 

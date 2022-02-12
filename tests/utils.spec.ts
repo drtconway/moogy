@@ -1,5 +1,5 @@
 import { readFileSync } from "fs";
-import { choose, factorial, logChoose, logFactorial, poly, frexp, ldexp, contFracA, contFracB, sumSeries } from "../src/internal/utils";
+import { choose, factorial, logChoose, logFactorial, poly, frexp, ldexp, contFracA, contFracB, sumSeries, cosPi } from "../src/internal/utils";
 
 import { addHelpers } from "./helpers";
 addHelpers();
@@ -236,4 +236,16 @@ describe("series summation", () => {
         expect(myLog1p(0.5)).toBeRelativelyCloseTo(Math.log1p(0.5));
         expect(myLog1p(-0.5)).toBeRelativelyCloseTo(Math.log1p(-0.5));
     });
+});
+
+describe("cosPi", () => {
+    it("x = -24.8", () => {
+        let x : number = -24.8;
+        expect(cosPi(x)).toBeRelativelyCloseTo(Math.cos(Math.PI*x));
+    });
+    it("x = 25.8", () => {
+        let x : number = 25.8;
+        expect(cosPi(x)).toBeRelativelyCloseTo(Math.cos(Math.PI*x));
+    });
+
 });
