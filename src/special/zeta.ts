@@ -108,7 +108,8 @@ function zetaImpOddInt(s: number): number {
     1.0000000000000000000000000000000247, 1.0000000000000000000000000000000062, 1.0000000000000000000000000000000015,
     1.0000000000000000000000000000000004, 1.0000000000000000000000000000000001,
   ];
-  return s < R.length ? R[s] : 1;
+  let idx = (s - 3) >> 1;
+  return idx < R.length ? R[idx] : 1;
 }
 
 function zetaImpl(s: number, sc: number): number {
@@ -117,21 +118,25 @@ function zetaImpl(s: number, sc: number): number {
   }
   if (Math.floor(s) == s) {
     let v = Math.trunc(s);
-    {
+    if (v == s) {
+      let vEven: boolean = (v & 1) == 0;
       if (v < 0) {
-        if ((-v & 1) == 0) {
+        let nv = -v;
+        let nvEven: boolean = (nv & 1) == 0;
+        if (nvEven) {
           return 0;
         }
-        let n = (-v + 1) >> 1;
+        let n = (nv + 1) >> 1;
         if (n < maxB2n) {
-          return ((-v & 1 ? -1 : 1) * B2n(n)) / (1 - v);
+          return ((nvEven ? 1 : -1) * B2n(n)) / (1 - v);
         }
-      } else if ((v & 1) == 0) {
+      } else if (vEven) {
         const v2: number = v >> 1;
+        const v2m1Even: boolean = ((v2 - 1) & 1) == 0;
         if (v2 < maxB2n && v <= maxFactorial) {
-          return (((v2 - 1) & 1) * ldexp(1, v - 1) * Math.pow(Math.PI, v) * B2n(v2)) / factorials[v];
+          return ((v2m1Even ? 1 : -1) * ldexp(1, v - 1) * Math.pow(Math.PI, v) * B2n(v2)) / factorials[v];
         }
-        return (((v2 - 1) & 1 ? -1 : 1) * ldexp(1, v - 1) * Math.pow(Math.PI, v) * B2n(v2)) / factorial(v);
+        return ((v2m1Even ? 1 : -1) * ldexp(1, v - 1) * Math.pow(Math.PI, v) * B2n(v2)) / factorial(v);
       } else {
         return zetaImpOddInt(v);
       }

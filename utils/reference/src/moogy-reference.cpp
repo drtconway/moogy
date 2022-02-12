@@ -2,6 +2,8 @@
 #include <boost/math/distributions/binomial.hpp>
 #include <boost/math/distributions/chi_squared.hpp>
 #include <boost/math/distributions/normal.hpp>
+#include <boost/math/special_functions/polygamma.hpp>
+#include <boost/math/special_functions/zeta.hpp>
 #include <boost/multiprecision/cpp_bin_float.hpp>
 #include <docopt/docopt.h>
 #include <iostream>
@@ -174,7 +176,7 @@ nlohmann::json norm(const double mu, const double sigma, uint64_t s) {
   std::uniform_real_distribution<double> U(-8 * sigma, +8 * sigma);
   std::vector<double> zs;
   for (double z = -2; z <= 2; z += 0.125) {
-      zs.push_back(z*sigma + mu);
+    zs.push_back(z * sigma + mu);
   }
   for (size_t i = 0; i < 10; ++i) {
     zs.push_back(U(rng) + mu);
@@ -196,11 +198,27 @@ void main_norm() {
   std::cout << tests << std::endl;
 }
 
+void main_zeta() {
+  nlohmann::json tests;
+  for (Real s = -250; s <= 150; s += 2) {
+      if (s/10 == 1) {
+          continue;
+      }
+    nlohmann::json itm;
+    Real z = boost::math::zeta(s/10);
+    itm["s"] = double(s/10);
+    itm["zeta"] = double(z);
+    tests.push_back(itm);
+  }
+  std::cout << tests << std::endl;
+}
+
 std::map<std::string, std::function<void()>> dists{
     {"binomial", main_binom},
     {"erf", main_erf},
     {"frexp", main_frexp},
-    {"norm", main_norm}
+    {"norm", main_norm},
+    {"zeta", main_zeta}
 };
 
 int main(int argc, const char *argv[]) {
