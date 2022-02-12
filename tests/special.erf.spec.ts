@@ -7,7 +7,7 @@ import { readFileSync } from "fs";
 
 const S: number = 0.25;
 
-const tests = JSON.parse(readFileSync("tests/data/erf.json").toString("utf-8"));
+const tests = JSON.parse(readFileSync("tests/data/special.erf.json").toString("utf-8"));
 
 describe("erf tests", () => {
     for (let test of tests) {

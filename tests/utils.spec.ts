@@ -158,7 +158,7 @@ describe("polynomial evaluation", () => {
   });
 });
 
-const frexpTests = JSON.parse(readFileSync("tests/data/frexp.json").toString("utf-8"));
+const frexpTests = JSON.parse(readFileSync("tests/data/utils.frexp.json").toString("utf-8"));
 
 describe("frexp & ldexp", () => {
   for (let test of frexpTests) {
