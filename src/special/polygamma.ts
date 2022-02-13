@@ -1,10 +1,17 @@
 import { B2n, cosPi, ldexp, maxB2n, poly, polyEven, sinPi } from "../internal/utils";
+import { DomainCriteria, domain, OverflowError, ConvergenceError } from "../internal/checks";
 import { factorials, logGamma, maxFactorial } from "./gamma";
 import { zeta } from "./zeta";
 
 const eps = 1e-20;
 const logMax = Math.log(Number.MAX_VALUE);
 const logTwo = Math.log(2);
+
+function not_negative_integer_or_zero(func: string): (z: number) => true | string {
+  return (z: number): true | string => {
+    return z > 0 || Math.floor(z) != z || `${func} cannot be evaluated at non-positive integer (${z})`;
+  };
+}
 
 function digammaImplLarge(x: number): number {
   const P: readonly number[] = [
@@ -44,6 +51,8 @@ function digammaImpl(x: number): number {
 }
 
 export function digamma(x: number): number {
+  domain(x, { satisfies: not_negative_integer_or_zero("digamma") });
+
   let res = 0;
 
   if (x <= -1) {
@@ -52,13 +61,7 @@ export function digamma(x: number): number {
     if (rem > 0.5) {
       rem -= 1;
     }
-    if (rem == 0) {
-      throw new Error(`digamma pole at ${1 - x}`);
-    }
     res = Math.PI / Math.tan(Math.PI * rem);
-  }
-  if (x == 0) {
-    throw new Error(`digamma pole at ${1 - x}`);
   }
   if (x >= 20) {
     res += digammaImplLarge(x);
@@ -114,11 +117,10 @@ function trigammaImpl(x: number): number {
 }
 
 export function trigamma(x: number): number {
+  domain(x, { satisfies: not_negative_integer_or_zero("trigamma") });
+
   if (x <= 0) {
     let z = 1 - x;
-    if (Math.floor(x) == x) {
-      throw new Error(`trigamma pole at ${x}`);
-    }
     let s = Math.abs(x) < Math.abs(z) ? sinPi(x) : sinPi(z);
     return -trigamma(z) + Math.pow(Math.PI, 2) / (s * s);
   }
@@ -184,7 +186,7 @@ function polygammaNearZero(n: number, x: number): number {
   for (let k = 0; ; ) {
     let t = facPart * zeta(k + n + 1);
     if (Number.isNaN(t) || Number.isNaN(sum + t)) {
-      throw new Error(`polygammaNearZero nans (t = ${t}, sum = ${sum}, zeta(${k + n + 1}) = ${zeta(k + n + 1)})`);
+      throw new ConvergenceError(`polygammaNearZero(${n}, ${x}) fails to converge.`);
     }
     sum += t;
     if (Math.abs(t) < Math.abs(sum * eps)) {
@@ -193,7 +195,7 @@ function polygammaNearZero(n: number, x: number): number {
     k += 1;
     facPart *= (-x * (n + k)) / k;
     if (k > 100) {
-      throw new Error(`polygammaNearZero fails to converge (t = ${t}, sum = ${sum})`);
+      throw new ConvergenceError(`polygammaNearZero(${n}, ${x}) fails to converge.`);
     }
   }
   sum *= scale;
@@ -246,7 +248,7 @@ function polygammaAtInfinity(n: number, x: number): number {
     partTerm /= x2;
 
     if (k >= maxB2n) {
-      throw new Error(`polyGammaAtInfinity doesn't converge`);
+      throw new Error(`polyGammaAtInfinity(${n}, ${x}) doesn't converge`);
     }
   }
 
@@ -257,47 +259,41 @@ function polygammaAtInfinity(n: number, x: number): number {
 }
 
 function polygammaAtTransition(n: number, x: number): number {
-    let d4d = Math.trunc(0.4 * 20);
-    let N = d4d * 4*n;
-    let m = n;
-    let itr = N - Math.trunc(x);
-    if (itr > 100*n) {
-        throw new Error(`polygammaAtTransition will not converge (itr=${itr})`);
-    }
+  let d4d = Math.trunc(0.4 * 20);
+  let N = d4d * 4 * n;
+  let m = n;
+  let itr = N - Math.trunc(x);
+  if (itr > 100 * n) {
+    throw new Error(`polygammaAtTransition(${n}, ${x}) will not converge (itr=${itr})`);
+  }
 
-    const mmmo = -m - 1;
-    let z = x;
-    let sum0 = 0;
-    let zpkpmmmo = 0;
+  const mmmo = -m - 1;
+  let z = x;
+  let sum0 = 0;
+  let zpkpmmmo = 0;
 
-    if (Math.log(z + itr) * mmmo > -logMax) {
-        for (let k = 1; k <= itr; ++k) {
-            zpkpmmmo = Math.pow(z, mmmo);
-            sum0 += zpkpmmmo;
-            z += 1;
-        }
-        sum0 *= factorials[n];
-    } else {
-        for (let k = 1; k <= itr; ++k) {
-            let lt = Math.log(z) * mmmo + logGamma(n + 1);
-            sum0 += Math.exp(lt);
-            z += 1;
-        }
+  if (Math.log(z + itr) * mmmo > -logMax) {
+    for (let k = 1; k <= itr; ++k) {
+      zpkpmmmo = Math.pow(z, mmmo);
+      sum0 += zpkpmmmo;
+      z += 1;
     }
-    if ((n - 1) & 1) {
-        sum0 = -sum0;
+    sum0 *= factorials[n];
+  } else {
+    for (let k = 1; k <= itr; ++k) {
+      let lt = Math.log(z) * mmmo + logGamma(n + 1);
+      sum0 += Math.exp(lt);
+      z += 1;
     }
-    return sum0 + polygammaAtInfinity(n, z);
+  }
+  if ((n - 1) & 1) {
+    sum0 = -sum0;
+  }
+  return sum0 + polygammaAtInfinity(n, z);
 }
 
 function polygammaImpl(n: number, x: number): number {
-  if (!Number.isInteger(n) || n < 0) {
-    throw new Error(`polygamma: n must be an integer > 0`);
-  }
   if (x < 0) {
-    if (Math.floor(x) == x) {
-      throw new Error(`polygamma infinity/pole at negative integer x`);
-    }
     let z = 1 - x;
     let res = polygamma(n, z) + Math.PI * polyCotPi(n, z, x);
     return n & 1 ? -res : res;
@@ -312,7 +308,7 @@ function polygammaImpl(n: number, x: number): number {
   } else if (x == 0.5) {
     let res = (n & 1 ? 1 : -1) * factorials[n] * zeta(n + 1);
     if (Math.abs(res) >= ldexp(Number.MAX_VALUE, -n - 1)) {
-      throw new Error(`polygamma overflow`);
+      throw new OverflowError(`polygamma(${n}, ${x}) overflow`);
     }
     res *= ldexp(1, n + 1) - 1;
     return res;
@@ -322,6 +318,9 @@ function polygammaImpl(n: number, x: number): number {
 }
 
 export function polygamma(n: number, x: number): number {
+  domain(n, { integer: true, greaterThanOrEqual: 0 });
+  domain(x, { satisfies: not_negative_integer_or_zero("polygamma") });
+
   if (n == 0) {
     return digamma(x);
   }
