@@ -1,4 +1,4 @@
-import { B2n, cosPi, factorial, ldexp, maxB2n, poly, polyEven, sinPi } from "../internal/utils";
+import { B2n, cosPi, ldexp, maxB2n, poly, polyEven, sinPi } from "../internal/utils";
 import { factorials, logGamma, maxFactorial } from "./gamma";
 import { zeta } from "./zeta";
 
@@ -183,6 +183,9 @@ function polygammaNearZero(n: number, x: number): number {
   let sum = prefix;
   for (let k = 0; ; ) {
     let t = facPart * zeta(k + n + 1);
+    if (Number.isNaN(t) || Number.isNaN(sum + t)) {
+      throw new Error(`polygammaNearZero nans (t = ${t}, sum = ${sum}, zeta(${k + n + 1}) = ${zeta(k + n + 1)})`);
+    }
     sum += t;
     if (Math.abs(t) < Math.abs(sum * eps)) {
       break;
@@ -190,7 +193,7 @@ function polygammaNearZero(n: number, x: number): number {
     k += 1;
     facPart *= (-x * (n + k)) / k;
     if (k > 100) {
-      throw new Error(`polygammaNearZero fails to converge`);
+      throw new Error(`polygammaNearZero fails to converge (t = ${t}, sum = ${sum})`);
     }
   }
   sum *= scale;

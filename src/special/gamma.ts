@@ -245,6 +245,40 @@ export const factorials: number[] = [
 ];
 export const maxFactorial: number = factorials.length;
 
+export function factorial(n : number) : number {
+  if (n < maxFactorial) {
+    return factorials[n];
+  }
+  return gamma(n + 1);
+}
+
+export function logFactorial(n : number) : number {
+  if (n < maxFactorial) {
+    return Math.log(factorials[n]);
+  }
+  return logGamma(n + 1);
+}
+
+export function logChoose(n: number, k: number): number {
+  if (k == 0 || k == n) {
+    return 0;
+  }
+  return logFactorial(n) - logFactorial(n - k) - logFactorial(k);
+}
+
+export function choose(n: number, k: number): number {
+  if (k == 0 || k == n) {
+    return 1;
+  }
+  let nmk = n - k;
+  let res = 1;
+  for (let j = 1; j <= k; ++j) {
+    res *= nmk + j;
+    res /= j;
+  }
+  return res;
+}
+
 export function gamma(z: number): number {
   const b_neg = z < 0;
   const zint = Math.floor(z) == z;

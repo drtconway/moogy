@@ -1,5 +1,5 @@
-import { B2n, factorial, ldexp, maxB2n, poly, sinPi } from "../internal/utils";
-import { factorials, gamma, logGamma, maxFactorial } from "./gamma";
+import { B2n, ldexp, maxB2n, poly, sinPi } from "../internal/utils";
+import { factorial, factorials, gamma, logGamma, maxFactorial } from "./gamma";
 
 const logRoot2Pi: number = 9.189385332046727417803297364056176398e-1;
 const log2Pi: number = Math.log(2 * Math.PI);
