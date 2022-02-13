@@ -113,7 +113,7 @@ function zetaImpOddInt(s: number): number {
 }
 
 function zetaImpl(s: number, sc: number): number {
-  if (s > 50) {
+  if (s > 200) {
     return 1;
   }
   if (Math.floor(s) == s) {
@@ -133,9 +133,6 @@ function zetaImpl(s: number, sc: number): number {
       } else if (vEven) {
         const v2: number = v >> 1;
         const v2m1Even: boolean = ((v2 - 1) & 1) == 0;
-        if (v2 < maxB2n && v <= maxFactorial) {
-          return ((v2m1Even ? 1 : -1) * ldexp(1, v - 1) * Math.pow(Math.PI, v) * B2n(v2)) / factorials[v];
-        }
         return ((v2m1Even ? 1 : -1) * ldexp(1, v - 1) * Math.pow(Math.PI, v) * B2n(v2)) / factorial(v);
       } else {
         return zetaImpOddInt(v);
@@ -144,9 +141,10 @@ function zetaImpl(s: number, sc: number): number {
   }
 
   let res;
-  if (Math.abs(s) < 1e-20) {
-    res = -0.5 * logRoot2Pi * s;
+  if (Math.abs(s) < 1e-15) {
+    res = -0.5 - logRoot2Pi * s;
   } else if (s < 0) {
+    console.log(`here! s=${s}, sc=${sc}`)
     {
       let tmp = s;
       s = sc;
