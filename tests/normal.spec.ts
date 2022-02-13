@@ -128,7 +128,6 @@ describe("normal randoms", () => {
     let n = 1000;
     let xs = Nd.random(R, n);
     expect(xs.length).toBe(n);
-    console.log(`ks = ${kolmogorovSmirnov(xs, Nd)}`);
     expect(kolmogorovSmirnov(xs, Nd)).toBeLessThan(0.025);
   });
 });
