@@ -113,7 +113,7 @@ function zetaImpOddInt(s: number): number {
 }
 
 function zetaImpl(s: number, sc: number): number {
-  if (s > 40) {
+  if (s > 50) {
     return 1;
   }
   if (Math.floor(s) == s) {

@@ -186,7 +186,7 @@ function polygammaNearZero(n: number, x: number): number {
   for (let k = 0; ; ) {
     let t = facPart * zeta(k + n + 1);
     if (Number.isNaN(t) || Number.isNaN(sum + t)) {
-      throw new ConvergenceError(`polygammaNearZero(${n}, ${x}) fails to converge.`);
+      throw new ConvergenceError(`polygammaNearZero(${n}, ${x}) fails to converge. (zeta(${k + n + 1}) = ${zeta(k + n + 1)})`);
     }
     sum += t;
     if (Math.abs(t) < Math.abs(sum * eps)) {
