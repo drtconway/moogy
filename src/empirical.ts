@@ -43,7 +43,6 @@ export class Empirical implements Distribution {
     let hi = n - 1;
     while (lo < hi) {
       let mid = (lo + hi) >> 1;
-      console.log(`lo=${lo}, mid=${mid}, hi=${hi}, vals[${lo}]=${this.values[lo]}, vals[${mid}]=${this.values[mid]}, vals[${hi}]=${this.values[hi]}`);
       if (this.values[mid] <= x) {
         lo = mid + 1;
       } else {
@@ -52,7 +51,6 @@ export class Empirical implements Distribution {
     }
     lo -= 1;
     const p = lo / n;
-    console.log(`lo=${lo}, n=${n}, p=${p}`);
     if (options.lower == undefined || options.lower) {
       if (options.log) {
         return Math.log(p);
