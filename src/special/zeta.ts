@@ -144,7 +144,6 @@ function zetaImpl(s: number, sc: number): number {
   if (Math.abs(s) < 1e-15) {
     res = -0.5 - logRoot2Pi * s;
   } else if (s < 0) {
-    console.log(`here! s=${s}, sc=${sc}`)
     {
       let tmp = s;
       s = sc;
