@@ -232,17 +232,26 @@ void main_special_gamma()
 void main_special_gamma_incomplete()
 {
   nlohmann::json tests;
+  for (Real a = 1e-3; a < 1e3; a *= 2.1)
   {
-    nlohmann::json itm;
-    Real a(999.25);
-    Real x(1001);
-    Real gp = boost::math::gamma_p(a, x);
-    Real gq = boost::math::gamma_q(a, x);
-    itm["a"] = double(a);
-    itm["x"] = double(x);
-    itm["gamma.lower.norm"] = double(gp);
-    itm["gamma.upper.norm"] = double(gq);
-    tests.push_back(itm);
+    Real lga = boost::math::lgamma(a);
+    for (Real x = 1e-10; x < 1.5e3; x *= 2.1)
+    {
+      Real gp = boost::math::gamma_p(a, x);
+      Real gq = boost::math::gamma_q(a, x);
+      nlohmann::json itm;
+      itm["a"] = double(a);
+      itm["x"] = double(x);
+      if (lga < 700) {
+        Real tgp = boost::math::tgamma_lower(a, x);
+        Real tgq = boost::math::tgamma(a, x);
+        itm["gamma.lower"] = double(tgp);
+        itm["gamma.upper"] = double(tgq);
+      }
+      itm["gamma.lower.norm"] = double(gp);
+      itm["gamma.upper.norm"] = double(gq);
+      tests.push_back(itm);
+    }
   }
   std::cout << tests << std::endl;
 }

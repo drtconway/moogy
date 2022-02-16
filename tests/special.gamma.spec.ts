@@ -15,7 +15,6 @@ import { addHelpers } from "./helpers";
 addHelpers();
 
 describe("factorials", () => {
-  return;
   it("0!", () => {
     expect(factorial(0)).toBe(1);
   });
@@ -37,7 +36,6 @@ describe("factorials", () => {
 });
 
 describe("choose", () => {
-  return;
   it("3 choose 1", () => {
     expect(choose(3, 1)).toBe(3);
   });
@@ -89,7 +87,6 @@ describe("choose", () => {
 });
 
 describe("log factorials", () => {
-  return;
   it("log 0!", () => {
     expect(logFactorial(0)).toBe(0);
   });
@@ -111,7 +108,6 @@ describe("log factorials", () => {
 });
 
 describe("log choose", () => {
-  return;
   it("log 3 choose 2", () => {
     expect(logChoose(3, 2)).toBeRelativelyCloseTo(1.098612288668109782108);
   });
@@ -160,14 +156,12 @@ describe("log choose", () => {
 });
 
 describe("sinpx = x * sin(pi * x)", () => {
-  return;
   it("x = 5/2", () => {
     expect(sinpx(5 / 2)).toBeRelativelyCloseTo((5 / 2) * Math.sin((Math.PI * 5) / 2), 15);
   });
 });
 
 describe("gamma special values", () => {
-  return;
   it("Γ(n) for small integers", () => {
     expect(gamma(1)).toBe(1);
     expect(gamma(4)).toBe(6);
@@ -209,7 +203,6 @@ describe("gamma special values", () => {
 });
 
 describe("log gamma special values", () => {
-  return;
   it("log Γ(n) for small integers", () => {
     expect(logGamma(1)).toBe(0);
     expect(logGamma(2)).toBe(0);
@@ -239,11 +232,10 @@ describe("log gamma special values", () => {
 
 import { readFileSync } from "fs";
 
-const tests = JSON.parse(readFileSync("tests/data/special.gamma.json").toString("utf-8"));
+const gammaTests = JSON.parse(readFileSync("tests/data/special.gamma.json").toString("utf-8"));
 
 describe("gamma parameter sweep", () => {
-  return;
-  for (let test of tests) {
+  for (let test of gammaTests) {
     const z: number = test.z;
     if ("gamma" in test) {
       it(`gamma(${z}) = ${test.gamma}`, () => {
@@ -287,7 +279,7 @@ describe("incomplete gamma lower normalised", () => {
   it(`a 5.5, x = 6`, () => {
     expect(incompleteGamma(5.5, 6, { lower: true, normalised: true })).toBeRelativelyCloseTo(0.6363567794831732626903);
   });
-  });
+});
 
 describe("incomplete gamma lower unnormalised", () => {
   it(`a 1, x = 1`, () => {
@@ -344,7 +336,6 @@ describe("incomplete gamma upper normalised", () => {
   it(`a 999.25, x = 1001`, () => {
     expect(incompleteGamma(999.25, 1001, { lower: false, normalised: true })).toBeRelativelyCloseTo(0.47373989240655895);
   });
-
 });
 
 describe("incomplete gamma upper unnormalised", () => {
@@ -372,4 +363,21 @@ describe("incomplete gamma upper unnormalised", () => {
   it(`a 1.125, x = 1e-10`, () => {
     expect(incompleteGamma(1.125, 1e-10, { lower: false, normalised: false })).toBeRelativelyCloseTo(0.9417426998447029351524);
   });
+});
+
+const incompleteGammaTests = JSON.parse(readFileSync("tests/data/special.gamma.incomplete.json").toString("utf-8"));
+
+describe("incomplete gamma parameter sweep", () => {
+  for (let test of incompleteGammaTests) {
+    const a: number = test.a;
+    const x: number = test.x;
+    it(`incompleteGamma(${a}, ${x} { lower: true, normalised: true }) = ${test["gamma.lower.norm"]}`, () => {
+      expect(incompleteGamma(a, x, { lower: true, normalised: true })).toBeRelativelyCloseTo(test["gamma.lower.norm"]);
+    });
+    if (test["gamma.lower"] != undefined) {
+      it(`incompleteGamma(${a}, ${x} { lower: true, normalised: false }) = ${test["gamma.lower"]}`, () => {
+        expect(incompleteGamma(a, x, { lower: true, normalised: false })).toBeRelativelyCloseTo(test["gamma.lower"]);
+      });
+    }
+  }
 });

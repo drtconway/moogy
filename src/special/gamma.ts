@@ -756,7 +756,7 @@ function gammaIncompleteImpl(a: number, x: number, norm: boolean, inv: boolean, 
     }
   }
 
-  console.log(`gammaIncompleteImpl(${a}, ${x}, ${norm}, ${inv}, ${deriv}) using evaluation method ${evalMethod}`);
+  //console.log(`gammaIncompleteImpl(${a}, ${x}, ${norm}, ${inv}, ${deriv}) using evaluation method ${evalMethod}`);
 
   switch (evalMethod) {
     case 0: {
@@ -838,7 +838,12 @@ function gammaIncompleteImpl(a: number, x: number, norm: boolean, inv: boolean, 
       if (!norm) {
         res = Math.pow(x, a) / a;
       } else {
-        res = Math.pow(x, a) / gamma(a + 1);
+        try {
+          res = Math.pow(x, a) / gamma(a + 1);
+        }
+        catch (err) {
+          res = 0;
+        }
       }
       res *= 1 - (a * x) / (a + 1);
       if (deriv) {
