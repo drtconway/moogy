@@ -1,5 +1,7 @@
-import { B2n, contFracA, maxB2n, poly, sumSeries } from "../internal/utils";
+import { B2n, contFracA, log1pmx, maxB2n, poly, powm1, sumSeries } from "../internal/utils";
 import { DomainCriteria, domain, OverflowError } from "../internal/checks";
+import { erfc } from "./erf";
+import { polygamma } from "./polygamma";
 
 const eps = 1e-20;
 const minRec = 20;
@@ -9,7 +11,11 @@ const euler = 5.77215664901532860606512090082402431e-1;
 const piSqr = 9.869604401089358618834490999876151135;
 const logPi = Math.log(Math.PI);
 const logMax = 709.0;
+const logMin = -709.0;
 const rootEps = 0.32927225399135962333569506281281311031656150598474e-9;
+const rootPi = 1.772453850905516027298167483341145182;
+const rootTwoPi = 2.506628274631000502415765284811045253;
+const logRootTwoPi = Math.log(rootTwoPi);
 
 export function sinpx(z: number): number {
   let sign = 1;
@@ -214,12 +220,12 @@ export function choose(n: number, k: number): number {
   return res;
 }
 
-function not_negative_integer_or_zero(z: number) : (true | string) {
-  return z > 0 || (Math.floor(z) != z) || `gamma cannot be evaluated at non-positive integer (${z})`;
+function not_negative_integer_or_zero(z: number): true | string {
+  return z > 0 || Math.floor(z) != z || `gamma cannot be evaluated at non-positive integer (${z})`;
 }
 
 export function gamma(z: number): number {
-  domain(z, {satisfies: not_negative_integer_or_zero});
+  domain(z, { satisfies: not_negative_integer_or_zero });
 
   const b_neg = z < 0;
   const zint = Math.floor(z) == z;
@@ -356,7 +362,7 @@ export function logGammaSmall(z: number, zm1: number, zm2: number): number {
 export type Sign = { value: number };
 
 export function logGamma(z: number, sign?: Sign): number {
-  domain(z, {satisfies: not_negative_integer_or_zero});
+  domain(z, { satisfies: not_negative_integer_or_zero });
 
   let res = 0;
   let resSign = 1;
@@ -392,4 +398,495 @@ export function logGamma(z: number, sign?: Sign): number {
     sign.value = resSign;
   }
   return res;
+}
+
+export function finiteGammaQ(a: number, x: number, deriv?: { value: number }): number {
+  const e: number = Math.exp(-x);
+  let sum: number = e;
+  if (sum != 0) {
+    let t = sum;
+    for (let n = 1; n < a; ++n) {
+      t /= n;
+      t *= x;
+      sum += t;
+    }
+  }
+  if (deriv) {
+    deriv.value = (e * Math.pow(x, a)) / factorial(Math.floor(a - 1));
+  }
+  return sum;
+}
+
+function finiteHalfGammaQ(a: number, x: number, deriv?: { value: number }): number {
+  let e = erfc(Math.sqrt(x));
+  if (e != 0 && a > 1) {
+    let t = Math.exp(-x) / Math.sqrt(Math.PI * x);
+    t *= x;
+    t /= 0.5;
+    let sum = t;
+    for (let n = 2; n < a; ++n) {
+      t /= n - 0.5;
+      t *= x;
+      sum += t;
+    }
+    e += sum;
+    if (deriv) {
+      deriv.value = 0;
+    }
+  } else if (deriv) {
+    deriv.value = (Math.sqrt(x) * Math.exp(-x)) / rootPi;
+  }
+  return e;
+}
+
+function incompleteGammaLargeSeries(a: number, x: number): () => number {
+  let ap = a;
+  let t = 1;
+  let k = 0;
+  return () => {
+    let res = t;
+    k += 1;
+    ap -= 1;
+    t *= ap / x;
+    return res;
+  };
+}
+
+function incompleteGammaLarge(a: number, x: number): number {
+  return sumSeries(incompleteGammaLargeSeries(a, x), 1e-25, 1000);
+}
+
+function regularisedGammaPrefix(a: number, z: number): number {
+  if (a < 1 && z < 1) {
+    return (Math.pow(z, a) * Math.exp(-z)) / gamma(a);
+  } else if (a > minRec) {
+    let scaled = scaledGamma(a);
+    let powTerm = Math.pow(z / a, a / 2);
+    let amz = a - z;
+    if (powTerm == 0 || Math.abs(amz) > logMax) {
+      return Math.exp(a * Math.log(z / a) + amz - Math.log(scaled));
+    }
+    return powTerm * Math.exp(amz) * (powTerm / scaled);
+  } else {
+    let shift = 1 + Math.trunc(minRec - a);
+    let res = regularisedGammaPrefix(a + shift, z);
+    if (res != 0) {
+      for (let i = 0; i < shift; ++i) {
+        res /= z;
+        res *= a + i;
+      }
+      return res;
+    } else {
+      let scaled = scaledGamma(a + shift);
+      let powTerm1 = Math.pow(z / (a + shift), a);
+      let powTerm2 = Math.pow(a + shift, -shift);
+      let powTerm3 = Math.exp(a + shift - z);
+      if (powTerm1 == 0 || powTerm2 == 0 || powTerm3 == 0 || Math.abs(a + shift - z) > logMax) {
+        return Math.exp(a * Math.log(z) - z - gamma(a));
+      }
+      res = (powTerm1 * powTerm2 * powTerm3) / scaled;
+      for (let i = 0; i < shift; ++i) {
+        res *= a + i;
+      }
+      return res;
+    }
+  }
+}
+
+function fullGammaPrefix(a: number, z: number): number {
+  let pfx;
+  const alz = a * Math.log(z);
+  if (z >= 1) {
+    if (alz < logMax && -z > logMin) {
+      pfx = Math.pow(z, a) * Math.exp(-z);
+    } else if (a >= 1) {
+      pfx = Math.pow(z / Math.exp(z / a), a);
+    } else {
+      pfx = Math.exp(alz - z);
+    }
+  } else {
+    if (alz > logMin) {
+      pfx = Math.pow(z, a) * Math.exp(-z);
+    } else if (z / a < logMax) {
+      pfx = Math.pow(z / Math.exp(z / a), a);
+    } else {
+      pfx = Math.exp(alz - z);
+    }
+  }
+  return pfx;
+}
+
+export function gamma1pm1(z: number): number {
+  if (z < 0) {
+    if (z < -0.5) {
+      return gamma(1 + z) - 1;
+    } else {
+      return Math.expm1(-Math.log1p(z) + logGammaSmall(z + 2, z + 1, z));
+    }
+  } else {
+    if (z < 2) {
+      return Math.expm1(logGammaSmall(z + 1, z, z - 1));
+    } else {
+      return gamma(1 + z) - 1;
+    }
+  }
+}
+
+function smallGammaSeries(a: number, x: number) : () => number {
+  let k = 0;
+  let part = 1;
+  return () => {
+    k += 1;
+    part *= -x;
+    part /= k;
+    return part / (a + k);
+  }
+}
+
+function gammaSmallUpperPart(a: number, x: number, inv: boolean, deriv?: { value: number }): { res: number; gam: number } {
+  let res;
+  let gam;
+  res = gamma1pm1(a);
+  gam = (res + 1) / a;
+  let p = powm1(x, a);
+  res -= p;
+  res /= a;
+  p += 1;
+  if (deriv) {
+    deriv.value = p / (gam * Math.exp(x));
+  }
+  let init = inv ? gam : 0;
+  init = (init - res) / p;
+  res = -p * sumSeries(smallGammaSeries(a, x), eps, maxIter - 10, init);
+  if (inv) {
+    res = -res;
+  }
+  return { res, gam };
+}
+
+function incompleteGammaTemmeLarge(a: number, x: number): number {
+  let sigma = (x - a) / a;
+  let phi = -log1pmx(sigma);
+  let y = a * phi;
+  let z = Math.sqrt(2 * phi);
+  if (x < a) {
+    z = -z;
+  }
+
+  let W: number[] = [];
+
+  const Cs: readonly number[][] = [
+    [
+      -0.333333333333333333333, 0.0833333333333333333333, -0.0148148148148148148148, 0.00115740740740740740741,
+      0.000352733686067019400353, -0.0001787551440329218107, 0.39192631785224377817e-4, -0.218544851067999216147e-5,
+      -0.18540622107151599607e-5, 0.829671134095308600502e-6, -0.176659527368260793044e-6, 0.670785354340149858037e-8,
+      0.102618097842403080426e-7, -0.438203601845335318655e-8, 0.914769958223679023418e-9, -0.255141939949462497669e-10,
+      -0.583077213255042506746e-10, 0.243619480206674162437e-10, -0.502766928011417558909e-11,
+    ],
+    [
+      -0.00185185185185185185185, -0.00347222222222222222222, 0.00264550264550264550265, -0.000990226337448559670782,
+      0.000205761316872427983539, -0.40187757201646090535e-6, -0.18098550334489977837e-4, 0.764916091608111008464e-5,
+      -0.161209008945634460038e-5, 0.464712780280743434226e-8, 0.137863344691572095931e-6, -0.575254560351770496402e-7,
+      0.119516285997781473243e-7, -0.175432417197476476238e-10, -0.100915437106004126275e-8, 0.416279299184258263623e-9,
+      -0.856390702649298063807e-10,
+    ],
+    [
+      0.00413359788359788359788, -0.00268132716049382716049, 0.000771604938271604938272, 0.200938786008230452675e-5,
+      -0.000107366532263651605215, 0.529234488291201254164e-4, -0.127606351886187277134e-4, 0.342357873409613807419e-7,
+      0.137219573090629332056e-5, -0.629899213838005502291e-6, 0.142806142060642417916e-6, -0.204770984219908660149e-9,
+      -0.140925299108675210533e-7, 0.622897408492202203356e-8, -0.136704883966171134993e-8,
+    ],
+    [
+      0.000649434156378600823045, 0.000229472093621399176955, -0.000469189494395255712128, 0.000267720632062838852962,
+      -0.756180167188397641073e-4, -0.239650511386729665193e-6, 0.110826541153473023615e-4, -0.56749528269915965675e-5,
+      0.142309007324358839146e-5, -0.278610802915281422406e-10, -0.169584040919302772899e-6, 0.809946490538808236335e-7,
+      -0.191111684859736540607e-7,
+    ],
+    [
+      -0.000861888290916711698605, 0.000784039221720066627474, -0.000299072480303190179733, -0.146384525788434181781e-5,
+      0.664149821546512218666e-4, -0.396836504717943466443e-4, 0.113757269706784190981e-4, 0.250749722623753280165e-9,
+      -0.169541495365583060147e-5, 0.890750753220530968883e-6, -0.229293483400080487057e-6,
+    ],
+    [
+      -0.000336798553366358150309, -0.697281375836585777429e-4, 0.000277275324495939207873, -0.000199325705161888477003,
+      0.679778047793720783882e-4, 0.141906292064396701483e-6, -0.135940481897686932785e-4, 0.801847025633420153972e-5,
+      -0.229148117650809517038e-5,
+    ],
+    [
+      0.000531307936463992223166, -0.000592166437353693882865, 0.000270878209671804482771, 0.790235323266032787212e-6,
+      -0.815396936756196875093e-4, 0.561168275310624965004e-4, -0.183291165828433755673e-4, -0.307961345060330478256e-8,
+      0.346515536880360908674e-5, -0.20291327396058603727e-5, 0.57887928631490037089e-6,
+    ],
+    [
+      0.000344367606892377671254, 0.517179090826059219337e-4, -0.000334931610811422363117, 0.000281269515476323702274,
+      -0.000109765822446847310235, -0.127410090954844853795e-6, 0.277444515115636441571e-4, -0.182634888057113326614e-4,
+      0.578769494973505239894e-5,
+    ],
+    [
+      -0.000652623918595309418922, 0.000839498720672087279993, -0.000438297098541721005061, -0.696909145842055197137e-6,
+      0.000166448466420675478374, -0.000127835176797692185853, 0.462995326369130429061e-4,
+    ],
+    [
+      -0.000596761290192746250124, -0.720489541602001055909e-4, 0.000678230883766732836162, -0.0006401475260262758451,
+      0.000277501076343287044992,
+    ],
+    [0.00133244544948006563713, -0.0019144384985654775265, 0.00110893691345966373396],
+    [
+      0.00157972766073083495909, 0.000162516262783915816899, -0.00206334210355432762645, 0.00213896861856890981541,
+      -0.00101085593912630031708,
+    ],
+    [-0.00407251211951401664727, 0.00640336283380806979482, -0.00404101610816766177474],
+  ];
+  for (let C of Cs) {
+    W.push(poly(C, z));
+  }
+
+  let res = poly(W, 1 / a);
+  res *= Math.exp(-y) / Math.sqrt(2 * Math.PI * a);
+  if (x < a) {
+    res = -res;
+  }
+  res += erfc(Math.sqrt(y)) / 2;
+  return res;
+}
+
+function gammaIncompleteImpl(a: number, x: number, norm: boolean, inv: boolean, deriv?: { value: number }): number {
+  domain(a, { greaterThan: 0 });
+  domain(x, { greaterThanOrEqual: 0 });
+
+  let res = 0;
+
+  if (a >= maxFactorial && !norm) {
+    if (inv && 4 * a < x) {
+      res = a * Math.log(x) - x;
+      if (deriv) {
+        deriv.value = Math.exp(res);
+      }
+      res += Math.log(upperGammaFraction(a, x));
+    } else if (!inv && a > 4 * x) {
+      res = a * Math.log(x) - x;
+      if (deriv) {
+        deriv.value = Math.exp(res);
+      }
+      let init = 0;
+      res + Math.log(lowerGammaSeries(a, x, init) / a);
+    } else {
+      res = gammaIncompleteImpl(a, x, true, inv, deriv);
+      if (res == 0) {
+        if (inv) {
+          res = 1 + 1 / (12 * a) + 1 / (288 * a * a);
+          res = Math.log(res) - a + (a - 0.5) * Math.log(a) + logRootTwoPi;
+          if (deriv) {
+            deriv.value = Math.exp(a * Math.log(x) - x);
+          }
+        } else {
+          res = a * Math.log(x) - x;
+          if (deriv) {
+            deriv.value = Math.exp(res);
+          }
+          let init = 0;
+          res += Math.log(lowerGammaSeries(a, x, init) / a);
+        }
+      } else {
+        res = Math.log(res) + logGamma(a);
+      }
+    }
+    if (res > logMax) {
+      throw new OverflowError(`gammaIncompleteImpl(${a}, ${x}, ${norm}, ${inv}) overflow`);
+    }
+    return Math.exp(res);
+  }
+
+  let isInt: boolean = false;
+  let isHalfInt: boolean = false;
+  let isSmallA: boolean = a < 30 && a <= x + 1 && x < logMax;
+  if (isSmallA) {
+    let fa = Math.floor(a);
+    isInt = fa == a;
+    isHalfInt = isInt ? false : Math.abs(fa - a) == 0.5;
+  }
+
+  let evalMethod: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+  if (isInt && x > 0.6) {
+    inv = !inv;
+    evalMethod = 0;
+  } else if (isHalfInt && x > 0.2) {
+    inv = !inv;
+    evalMethod = 1;
+  } else if (x < rootEps && a > 1) {
+    evalMethod = 6;
+  } else if (x > 1000 && (a < x || Math.abs(a - 50) / x < 1)) {
+    inv = !inv;
+    evalMethod = 7;
+  } else if (x < 0.5) {
+    if (-0.4 / Math.log(x) < a) {
+      evalMethod = 2;
+    } else {
+      evalMethod = 3;
+    }
+  } else if (x < 1.1) {
+    if (x * 0.75 < a) {
+      evalMethod = 2;
+    } else {
+      evalMethod = 3;
+    }
+  } else {
+    let useTemme = false;
+    if (norm && a > 20) {
+      let sigma = Math.abs((x - a) / a);
+      if (a > 200) {
+        if (20 / a > sigma * sigma) {
+          useTemme = true;
+        }
+      } else {
+        if (sigma < 0.4) {
+          useTemme = true;
+        }
+      }
+    }
+    if (useTemme) {
+      evalMethod = 5;
+    } else {
+      if (x - 1 / (3 * x) < a) {
+        evalMethod = 2;
+      } else {
+        inv = !inv;
+        evalMethod = 4;
+      }
+    }
+  }
+
+  console.log(`gammaIncompleteImpl(${a}, ${x}, ${norm}, ${inv}, ${deriv}) using evaluation method ${evalMethod}`);
+
+  switch (evalMethod) {
+    case 0: {
+      res = finiteGammaQ(a, x, deriv);
+      if (!norm) {
+        res *= gamma(a);
+      }
+      break;
+    }
+    case 1: {
+      res = finiteHalfGammaQ(a, x, deriv);
+      if (!norm) {
+        res *= gamma(a);
+      }
+      if (deriv && deriv.value == 0) {
+        deriv.value = regularisedGammaPrefix(a, x);
+      }
+      break;
+    }
+    case 2: {
+      res = norm ? regularisedGammaPrefix(a, x) : fullGammaPrefix(a, x);
+      if (deriv) {
+        deriv.value = res;
+      }
+      if (res != 0) {
+        let init = 0;
+        let optInv = false;
+        if (inv) {
+          init = norm ? 1 : gamma(a);
+          if (norm || res >= 1 || Number.MAX_VALUE * res > init) {
+            init /= res;
+            if (norm || a < 1 || Number.MAX_VALUE / a > init) {
+              init *= -a;
+              optInv = true;
+            } else {
+              init = 0;
+            }
+          }
+        }
+        res *= lowerGammaSeries(a, x, init) / a;
+        if (optInv) {
+          inv = false;
+          res = -res;
+        }
+      }
+      break;
+    }
+    case 3: {
+      inv = !inv;
+      let v = gammaSmallUpperPart(a, x, inv, deriv);
+      inv = false;
+      res = v.res;
+      if (norm) {
+        res /= v.gam;
+      }
+      break;
+    }
+    case 4: {
+      res = norm ? regularisedGammaPrefix(a, x) : fullGammaPrefix(a, x);
+      if (deriv) {
+        deriv.value = res;
+      }
+      if (res != 0) {
+        res *= upperGammaFraction(a, x);
+      }
+      break;
+    }
+    case 5: {
+      res = incompleteGammaTemmeLarge(a, x);
+      if (x >= a) {
+        inv = !inv;
+      }
+      if (deriv) {
+        deriv.value = regularisedGammaPrefix(a, x);
+      }
+      break;
+    }
+    case 6: {
+      if (!norm) {
+        res = Math.pow(x, a) / a;
+      } else {
+        res = Math.pow(x, a) / gamma(a + 1);
+      }
+      res *= 1 - (a * x) / (a + 1);
+      if (deriv) {
+        deriv.value = regularisedGammaPrefix(a, x);
+      }
+      break;
+    }
+    case 7: {
+      res = norm ? regularisedGammaPrefix(a, x) : fullGammaPrefix(a, x);
+      if (deriv) {
+        deriv.value = res;
+      }
+      res /= x;
+      if (res != 0) {
+        res *= incompleteGammaLarge(a, x);
+      }
+      break;
+    }
+  }
+  if (norm && res > 1) {
+    res = 1;
+  }
+  if (inv) {
+    let gam = norm ? 1 : gamma(a);
+    res = gam - res;
+  }
+  if (deriv) {
+    if (x < 1 && Number.MAX_VALUE * x < deriv.value) {
+      deriv.value = Number.MAX_VALUE / 2;
+    }
+    deriv.value /= x;
+  }
+  return res;
+}
+
+export interface IncompleteGammaOptions {
+  lower?: boolean;
+  normalised?: boolean;
+}
+
+export function incompleteGamma(a: number, x: number, options?: IncompleteGammaOptions): number {
+  let inv = false;
+  if (options && options.lower != undefined) {
+    inv = !options.lower;
+  }
+  let norm = true;
+  if (options && options.normalised != undefined) {
+    norm = options.normalised;
+  }
+  return gammaIncompleteImpl(a, x, norm, inv);
 }

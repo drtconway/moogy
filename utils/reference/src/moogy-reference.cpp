@@ -229,6 +229,24 @@ void main_special_gamma()
   std::cout << tests << std::endl;
 }
 
+void main_special_gamma_incomplete()
+{
+  nlohmann::json tests;
+  {
+    nlohmann::json itm;
+    Real a(999.25);
+    Real x(1001);
+    Real gp = boost::math::gamma_p(a, x);
+    Real gq = boost::math::gamma_q(a, x);
+    itm["a"] = double(a);
+    itm["x"] = double(x);
+    itm["gamma.lower.norm"] = double(gp);
+    itm["gamma.upper.norm"] = double(gq);
+    tests.push_back(itm);
+  }
+  std::cout << tests << std::endl;
+}
+
 void main_special_polygamma()
 {
   nlohmann::json tests;
@@ -319,6 +337,7 @@ std::map<std::string, std::function<void()>> dists{
     {"norm", main_norm},
     {"special_erf", main_special_erf},
     {"special_gamma", main_special_gamma},
+    {"special_gamma_incomplete", main_special_gamma_incomplete},
     {"special_polygamma", main_special_polygamma},
     {"special_zeta", main_special_zeta},
     {"utils_frexp", main_utils_frexp},
