@@ -1,7 +1,8 @@
-import { B2n, contFracA, log1pmx, maxB2n, poly, powm1, sumSeries } from "../internal/utils";
+import { B2n, contFracA, ldexp, log1pmx, maxB2n, poly, powm1, sumSeries } from "../internal/utils";
 import { DomainCriteria, domain, OverflowError } from "../internal/checks";
 import { erfc } from "./erf";
 import { polygamma } from "./polygamma";
+import { isNativeError } from "util/types";
 
 const eps = 1e-20;
 const minRec = 20;
@@ -16,6 +17,7 @@ const rootEps = 0.32927225399135962333569506281281311031656150598474e-9;
 const rootPi = 1.772453850905516027298167483341145182;
 const rootTwoPi = 2.506628274631000502415765284811045253;
 const logRootTwoPi = Math.log(rootTwoPi);
+const natE = Math.exp(1);
 
 export function sinpx(z: number): number {
   let sign = 1;
@@ -894,4 +896,114 @@ export function incompleteGamma(a: number, x: number, options?: IncompleteGammaO
     norm = options.normalised;
   }
   return gammaIncompleteImpl(a, x, norm, inv);
+}
+
+function gammaDeltaRatioImp(z : number, delta : number) : number {
+  let numShift = 0;
+  let denShift = 0;
+
+  if (minRec > z) {
+    numShift = 1 + Math.trunc(minRec - z);
+  }
+  if (minRec > z + delta) {
+    denShift = 1 + Math.trunc(minRec - z - delta);
+  }
+
+  if (numShift == 0 && denShift == 0) {
+    let gamNum = scaledGamma(z);
+    let gamDen = scaledGamma(z + delta);
+    let res = gamNum / gamDen;
+    let scale = Math.exp(z * Math.log1p(-delta / (z + delta))) * Math.pow((delta + z) / natE, -delta);
+    res *= scale;
+    return res;
+  }
+
+  let zz = z + numShift;
+  let dd = delta - (numShift - denShift);
+  let rat = gammaDeltaRatioImp(zz, dd);
+  for (let i = 0; i < numShift; ++i) {
+    rat /= (z + i);
+    if (i < denShift) {
+      rat *= (z + delta + i);
+    }
+  }
+  for (let i = numShift; i < denShift; ++i) {
+    rat *= (z + delta + i);
+  }
+  return rat;
+}
+
+export function gammaDeltaRatio(z : number, delta : number) : number {
+  if ((z <= 0) || (z + delta <= 0)) {
+    return gamma(z) / gamma(z + delta);
+  }
+  if (Math.floor(delta) == delta) {
+    if (Math.floor(z) == z) {
+      if (z < maxFactorial && z + delta < maxFactorial) {
+        return factorials[z - 1] / factorials[z + delta - 1];
+      }
+    }
+    if (Math.abs(delta) < 20) {
+      if (delta == 0) {
+        return 1;
+      }
+      if (delta < 0) {
+        z -= 1;
+        let res = z;
+        delta += 1;
+        while (delta != 0) {
+          z -= 1;
+          res *= z;
+          delta += 1;
+        }
+        return res;
+      } else {
+        let res = 1 / z;
+        delta -= 1;
+        while (delta != 0) {
+          z += 1;
+          res /= z;
+          delta -= 1;
+        }
+        return res;
+      }
+    }
+  }
+  return gammaDeltaRatioImp(z, delta);
+}
+
+export function gammaRatio(x : number, y : number) : number {
+  if (x < Number.MIN_VALUE) {
+    let shift = ldexp(1, 20);
+    return shift * gammaRatio(x*shift, y);
+  }
+  if (x < maxFactorial && y < maxFactorial) {
+    return gamma(x) / gamma(y);
+  }
+  let pfx = 1;
+  if (x < 1) {
+    if (y < 2*maxFactorial) {
+      pfx /= x;
+      x += 1;
+      while (y >= maxFactorial) {
+        y -= 1;
+        pfx /= y;
+      }
+      return pfx * gamma(x) / gamma(y);
+    }
+    return Math.exp(logGamma(x) - logGamma(y));
+  }
+  if (y < 1) {
+    if (x < 2*maxFactorial) {
+      pfx *= y;
+      y += 1;
+      while (x > maxFactorial) {
+        x -= 1;
+        pfx *= x;
+      }
+      return pfx * gamma(x) / gamma(y);
+    }
+    return Math.exp(logGamma(x) - logGamma(y));
+  }
+  return gammaDeltaRatio(x, y - x);
 }

@@ -3,6 +3,8 @@ import {
   factorial,
   finiteGammaQ,
   gamma,
+  gammaDeltaRatio,
+  gammaRatio,
   incompleteGamma,
   logChoose,
   logFactorial,
@@ -379,5 +381,27 @@ describe("incomplete gamma parameter sweep", () => {
         expect(incompleteGamma(a, x, { lower: true, normalised: false })).toBeRelativelyCloseTo(test["gamma.lower"]);
       });
     }
+  }
+});
+
+const ratioGammaTests = JSON.parse(readFileSync("tests/data/special.gamma.ratio.json").toString("utf-8"));
+
+describe("gamma ratio parameter sweep", () => {
+  for (let test of ratioGammaTests) {
+    const a: number = test.a;
+    const b: number = test.b;
+    const d: number = test.d;
+    it(`gammaRatio(${a}, ${b}) = ${test["ratio"]}`, () => {
+      expect(gammaRatio(a, b)).toBeRelativelyCloseTo(test["ratio"]);
+      if ("ratio.reciprocal" in test) {
+        expect(gammaRatio(b, a)).toBeRelativelyCloseTo(test["ratio.reciprocal"]);
+      }
+    });
+    it(`gammaDeltaRatio(${a}, ${d}) = ${test["delta.ratio"]}`, () => {
+      expect(gammaDeltaRatio(a, d)).toBeRelativelyCloseTo(test["delta.ratio"]);
+      if ("delta.ratio.reciprocal" in test) {
+        expect(gammaDeltaRatio(b, -d)).toBeRelativelyCloseTo(test["delta.ratio.reciprocal"]);
+      }
+    });
   }
 });
