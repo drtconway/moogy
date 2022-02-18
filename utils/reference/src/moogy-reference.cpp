@@ -202,6 +202,22 @@ void main_special_gamma() {
   std::cout << tests << std::endl;
 }
 
+  void main_special_gamma_derivative() {
+    nlohmann::json tests;
+    for (Real a = 1e-3; a < 1e3; a *= 2.1) {
+      Real lga = boost::math::lgamma(a);
+      for (Real x = 1e-10; x < 1.5e3; x *= 2.1) {
+        Real d = boost::math::gamma_p_derivative(a, x);
+        nlohmann::json itm;
+        itm["a"] = double(a);
+        itm["x"] = double(x);
+        itm["gamma.lower.norm.derivative"] = double(d);
+        tests.push_back(itm);
+      }
+    }
+    std::cout << tests << std::endl;
+  }
+
 void main_special_gamma_incomplete() {
   nlohmann::json tests;
   for (Real a = 1e-3; a < 1e3; a *= 2.1) {
@@ -408,6 +424,7 @@ std::map<std::string, std::function<void()>> dists{
     {"norm", main_norm},
     {"special_erf", main_special_erf},
     {"special_gamma", main_special_gamma},
+    {"special_gamma_derivative", main_special_gamma_derivative},
     {"special_gamma_incomplete", main_special_gamma_incomplete},
     {"special_gamma_ratio", main_special_gamma_ratio},
     {"special_polygamma", main_special_polygamma},

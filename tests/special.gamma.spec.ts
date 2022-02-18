@@ -4,12 +4,12 @@ import {
   finiteGammaQ,
   gamma,
   gammaDeltaRatio,
+  gammaDerivative,
   gammaRatio,
   incompleteGamma,
   logChoose,
   logFactorial,
   logGamma,
-  scaledGamma,
   sinpx,
 } from "../src/special/gamma";
 
@@ -401,6 +401,23 @@ describe("gamma ratio parameter sweep", () => {
       expect(gammaDeltaRatio(a, d)).toBeRelativelyCloseTo(test["delta.ratio"]);
       if ("delta.ratio.reciprocal" in test) {
         expect(gammaDeltaRatio(b, -d)).toBeRelativelyCloseTo(test["delta.ratio.reciprocal"]);
+      }
+    });
+  }
+});
+
+const gammaDerivativeTests = JSON.parse(readFileSync("tests/data/special.gamma.derivative.json").toString("utf-8"));
+
+describe("gamma ratio parameter sweep", () => {
+  for (let test of gammaDerivativeTests) {
+    const a: number = test.a;
+    const x: number = test.x;
+    const d: number = test["gamma.lower.norm.derivative"];
+    it(`gammaDerivative(${a}, ${x}) = ${d}`, () => {
+      if (d > 1e-300) {
+        expect(gammaDerivative(a, x)).toBeRelativelyCloseTo(d);
+      } else {
+        expect(gammaDerivative(a, x)).toBeRelativelyCloseTo(d, 5);
       }
     });
   }

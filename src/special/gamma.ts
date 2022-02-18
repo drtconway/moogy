@@ -1007,3 +1007,30 @@ export function gammaRatio(x : number, y : number) : number {
   }
   return gammaDeltaRatio(x, y - x);
 }
+
+export function gammaDerivative(a : number, x : number) : number {
+  domain(a, {greaterThanOrEqual: 0});
+  domain(x, {greaterThanOrEqual: 0});
+
+  if (x == 0) {
+    if (a > 1) {
+      return 0;
+    }
+    if (a == 1) {
+      return 0;
+    }
+    throw new OverflowError(`gammaDerivative(${a}, ${x})`);
+  }
+
+  let f1 = regularisedGammaPrefix(a, x);
+  if ((x < 1) && Number.MAX_VALUE * x < f1) {
+    throw new OverflowError(`gammaDerivative(${a}, ${x})`);
+  }
+  if (f1 == 0) {
+    f1 = a * Math.log(x) - x - logGamma(a) - Math.log(x);
+    f1 = Math.exp(f1);
+  } else {
+    f1 /= x;
+  }
+  return f1;
+}
