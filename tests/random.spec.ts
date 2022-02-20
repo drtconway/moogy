@@ -22,19 +22,19 @@ describe("basic randoms", () => {
   });
 
   it("uniform [0,1)", () => {
-    const J = 251;
-    const cts: number[] = [];
-    for (let i = 0; i < J; ++i) {
-      cts.push(0);
-    }
-    for (let i = 0; i < 10 * J; ++i) {
+    let n = 0;
+    let s = 0;
+    let s2 = 0;
+    for (let i = 0; i < 10000; ++i) {
       let u = R.random();
-      let j = Math.floor(u * J);
-      cts[j] += 1;
+      n += 1;
+      s += u;
+      s2 += u*u;
     }
-    for (let c of cts) {
-      expect(c).toBeGreaterThan(0);
-    }
+    let m = s/n;
+    let sd = Math.sqrt(s2/n - m*m);
+    expect(Math.abs(m - 0.5)).toBeLessThan(0.1);
+    expect(Math.abs(sd - Math.sqrt(1/12))).toBeLessThan(0.1);
   });
 });
 
