@@ -1,5 +1,5 @@
 import { B2n, cosPi, ldexp, maxB2n, poly, polyEven, sinPi } from "../internal/utils";
-import { DomainCriteria, domain, OverflowError, ConvergenceError } from "../internal/checks";
+import { domain, OverflowError, ConvergenceError } from "../internal/checks";
 import { factorials, logGamma, maxFactorial } from "./gamma";
 import { zeta } from "./zeta";
 

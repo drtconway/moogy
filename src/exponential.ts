@@ -13,26 +13,26 @@ export class Exponential implements Distribution {
 
   pdf(x: number, options: PdfOptions = { log: false }): number {
     if (options.log) {
-        return this.logLambda  - this.lambda * x;
+      return this.logLambda - this.lambda * x;
     } else {
-        return this.lambda * Math.exp(-this.lambda*x);
+      return this.lambda * Math.exp(-this.lambda * x);
     }
   }
 
   cdf(x: number, options: CdfOptions = { lower: true, log: false }): number {
-      if (options.lower != undefined && options.lower) {
-        if (options.log) {
-            return Math.log1p(-Math.exp(-this.lambda*x));
-        } else {
-            return -Math.expm1(-this.lambda*x);
-        }
+    if (options.lower != undefined && options.lower) {
+      if (options.log) {
+        return Math.log1p(-Math.exp(-this.lambda * x));
       } else {
-        if (options.log) {
-            return -this.lambda*x;
-        } else {
-            return Math.exp(-this.lambda*x);
-        }
+        return -Math.expm1(-this.lambda * x);
       }
+    } else {
+      if (options.log) {
+        return -this.lambda * x;
+      } else {
+        return Math.exp(-this.lambda * x);
+      }
+    }
   }
 
   random(rng: RandomSource): number;
@@ -50,6 +50,6 @@ export class Exponential implements Distribution {
   }
 
   private oneVariate(rng: RandomSource): number {
-      return -Math.log(rng.random()) / this.lambda;
+    return -Math.log(rng.random()) / this.lambda;
   }
 }
