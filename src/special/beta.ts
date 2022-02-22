@@ -125,7 +125,6 @@ function incompleteBetaPowerTerms(a: number, b: number, x: number, y: number, no
     let res = incompleteBetaPowerTerms(a + aShift, b + bShift, x, y, norm, prefix);
     if (!denormal(res)) {
       for (let i = 0; i < cShift; ++i) {
-        res /= c + i;
         if (i < aShift) {
           res *= a + i;
           res /= x;
@@ -134,6 +133,7 @@ function incompleteBetaPowerTerms(a: number, b: number, x: number, y: number, no
           res *= b + i;
           res /= y;
         }
+        res /= c + i;
       }
       return prefix * res;
     } else {
@@ -539,7 +539,7 @@ export function incompleteBetaImpl(
           if (!inv) {
             frac = incompleteBetaSmallBLargeASeries(a + 20, b, x, y, frac, pfx, norm);
           } else {
-            frac = norm ? -1 : -beta(a, b);
+            frac -= norm ? 1 : beta(a, b);
             inv = false;
             frac = -incompleteBetaSmallBLargeASeries(a + 20, b, x, y, frac, pfx, norm);
           }
@@ -580,7 +580,7 @@ export function incompleteBetaImpl(
           } else {
             frac = norm ? -1 : -beta(a, b);
             inv = false;
-            frac = incompleteBetaSmallBLargeASeries(a, b, x, y, frac, 1, norm);
+            frac = -incompleteBetaSmallBLargeASeries(a, b, x, y, frac, 1, norm);
           }
         } else {
           let pfx;
@@ -589,13 +589,13 @@ export function incompleteBetaImpl(
           } else {
             pfx = 1;
           }
+          frac = incompleteBetaAStep(a, b, x, y, 20, norm, deriv);
           if (!inv) {
-            frac = incompleteBetaAStep(a, b, x, y, 20, norm, deriv);
             frac = incompleteBetaSmallBLargeASeries(a + 20, b, x, y, frac, pfx, norm);
           } else {
-            frac = norm ? -1 : -beta(a, b);
+            frac -= norm ? 1 : beta(a, b);
             inv = false;
-            frac = incompleteBetaSmallBLargeASeries(a + 20, b, x, y, frac, pfx, norm);
+            frac = -incompleteBetaSmallBLargeASeries(a + 20, b, x, y, frac, pfx, norm);
           }
         }
       }

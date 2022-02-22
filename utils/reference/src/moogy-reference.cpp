@@ -160,6 +160,33 @@ void main_special_beta() {
   std::cout << tests << std::endl;
 }
 
+void main_special_beta_incomplete() {
+  nlohmann::json tests;
+  Real w = sqrt(sqrt(2.0));
+  Real v = sqrt(3);
+  for (Real a = 1e-2; a < 1000; a *= 3) {
+    for (Real b = 1e-2; b < 1000; b *= v) {
+      for (Real x = 1e-3; x < 1; x *= w) {
+        std::cerr << "ibeta(" << a << ", " << b << ", " << x << ")" << std::endl;
+        Real lr = boost::math::ibeta(a, b, x);
+        Real ur = boost::math::ibetac(a, b, x);
+        Real lu = boost::math::beta(a, b, x);
+        Real uu = boost::math::betac(a, b, x);
+        nlohmann::json itm;
+        itm["a"] = double(a);
+        itm["b"] = double(b);
+        itm["x"] = double(x);
+        itm["beta.lower"] = double(lu);
+        itm["beta.lower.norm"] = double(lr);
+        itm["beta.upper"] = double(uu);
+        itm["beta.upper.norm"] = double(ur);
+        tests.push_back(itm);
+      }
+    }
+  }
+  std::cout << tests << std::endl;
+}
+
 void main_special_erf() {
   nlohmann::json tests;
   auto makeItem = [&](double z) {
@@ -438,6 +465,7 @@ std::map<std::string, std::function<void()>> dists{
     {"binomial", main_binom},
     {"norm", main_norm},
     {"special_beta", main_special_beta},
+    {"special_beta_incomplete", main_special_beta_incomplete},
     {"special_erf", main_special_erf},
     {"special_gamma", main_special_gamma},
     {"special_gamma_derivative", main_special_gamma_derivative},

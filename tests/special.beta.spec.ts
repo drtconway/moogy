@@ -38,3 +38,41 @@ describe("beta parameter sweep", () => {
     });
   }
 });
+
+const incompleteBetaTests = JSON.parse(readFileSync("tests/data/special.beta.incomplete.json").toString("utf-8"));
+
+describe("incomplete beta parameter sweep", () => {
+  const epsilon = 1e-280;
+  for (let test of incompleteBetaTests) {
+    it(`incomplete beta(${test.a}, ${test.b}, ${test.x})`, () => {
+      if (test["beta.lower.norm"] >= epsilon) {
+        expect(incompleteBeta(test.a, test.b, test.x, { lower: true, normalised: true })).toBeRelativelyCloseTo(
+          test["beta.lower.norm"]
+        );
+      } else {
+        expect(incompleteBeta(test.a, test.b, test.x, { lower: true, normalised: true })).toBeLessThan(epsilon);
+      }
+      if (test["beta.lower"] >= epsilon) {
+        expect(incompleteBeta(test.a, test.b, test.x, { lower: true, normalised: false })).toBeRelativelyCloseTo(
+          test["beta.lower"]
+        );
+      } else {
+        expect(incompleteBeta(test.a, test.b, test.x, { lower: true, normalised: false })).toBeLessThan(epsilon);
+      }
+      if (test["beta.upper.norm"] >= epsilon) {
+        expect(incompleteBeta(test.a, test.b, test.x, { lower: false, normalised: true })).toBeRelativelyCloseTo(
+          test["beta.upper.norm"]
+        );
+      } else {
+        expect(incompleteBeta(test.a, test.b, test.x, { lower: false, normalised: true })).toBeLessThan(epsilon);
+      }
+      if (test["beta.upper"] >= epsilon) {
+        expect(incompleteBeta(test.a, test.b, test.x, { lower: false, normalised: false })).toBeRelativelyCloseTo(
+          test["beta.upper"]
+        );
+      } else {
+        expect(incompleteBeta(test.a, test.b, test.x, { lower: false, normalised: false })).toBeLessThan(epsilon);
+      }
+    });
+  }
+});

@@ -22,7 +22,7 @@ export function addHelpers() {
 
       let diff = Math.abs(got - expected);
       let rel = 10 ** -digits;
-      let pass: boolean = diff < Math.abs(rel * got) || diff < Math.abs(rel * expected) || (expected == 0 && diff < rel);
+      let pass: boolean = diff < Math.abs(rel * got) || diff < Math.abs(rel * expected) || (Math.abs(expected) < 1e-312 && Math.abs(got) < 1e-312);
       let message = () => `${got} should be the same as ${expected} up to ${digits} digits of precision.`;
 
       return { pass, message };
