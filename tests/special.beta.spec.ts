@@ -39,6 +39,15 @@ describe("beta parameter sweep", () => {
   }
 });
 
+describe("incomplete beta special cases", () => {
+    it("incompleteBeta(27, 4974, 0.02, {lower: false, normalised: true})", () => {
+        expect(incompleteBeta(27, 4974, 0.02, {lower: false, normalised: true})).toBeRelativelyCloseTo(7.09840035905135e-19);
+    });
+    it("incompleteBeta(5000, 1, 0.98, {lower: false, normalised: true}) = 1", () => {
+        expect(incompleteBeta(5000, 1, 0.98, {lower: false, normalised: true})).toBeRelativelyCloseTo(1);
+    });
+});
+
 const incompleteBetaTests = JSON.parse(readFileSync("tests/data/special.beta.incomplete.json").toString("utf-8"));
 
 describe("incomplete beta parameter sweep", () => {
