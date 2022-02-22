@@ -458,7 +458,7 @@ function incompleteGammaLarge(a: number, x: number): number {
   return sumSeries(incompleteGammaLargeSeries(a, x), 1e-25, 1000);
 }
 
-function regularisedGammaPrefix(a: number, z: number): number {
+export function regularisedGammaPrefix(a: number, z: number): number {
   if (a < 1 && z < 1) {
     return (Math.pow(z, a) * Math.exp(-z)) / gamma(a);
   } else if (a > minRec) {
@@ -495,7 +495,7 @@ function regularisedGammaPrefix(a: number, z: number): number {
   }
 }
 
-function fullGammaPrefix(a: number, z: number): number {
+export function fullGammaPrefix(a: number, z: number): number {
   let pfx;
   const alz = a * Math.log(z);
   if (z >= 1) {

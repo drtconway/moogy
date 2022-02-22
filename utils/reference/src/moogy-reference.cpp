@@ -145,6 +145,21 @@ void main_norm() {
   std::cout << tests << std::endl;
 }
 
+void main_special_beta() {
+  nlohmann::json tests;
+  for (Real a = 1e-5; a < 100; a *= 1.414213562373095145475) {
+    for (Real b = 1e-5; b < 100; b *= 1.414213562373095145475) {
+      Real v = boost::math::beta(a, b);
+      nlohmann::json itm;
+      itm["a"] = double(a);
+      itm["b"] = double(b);
+      itm["beta"] = double(v);
+      tests.push_back(itm);
+    }
+  }
+  std::cout << tests << std::endl;
+}
+
 void main_special_erf() {
   nlohmann::json tests;
   auto makeItem = [&](double z) {
@@ -202,21 +217,21 @@ void main_special_gamma() {
   std::cout << tests << std::endl;
 }
 
-  void main_special_gamma_derivative() {
-    nlohmann::json tests;
-    for (Real a = 1e-3; a < 1e3; a *= 2.1) {
-      Real lga = boost::math::lgamma(a);
-      for (Real x = 1e-10; x < 1.5e3; x *= 2.1) {
-        Real d = boost::math::gamma_p_derivative(a, x);
-        nlohmann::json itm;
-        itm["a"] = double(a);
-        itm["x"] = double(x);
-        itm["gamma.lower.norm.derivative"] = double(d);
-        tests.push_back(itm);
-      }
+void main_special_gamma_derivative() {
+  nlohmann::json tests;
+  for (Real a = 1e-3; a < 1e3; a *= 2.1) {
+    Real lga = boost::math::lgamma(a);
+    for (Real x = 1e-10; x < 1.5e3; x *= 2.1) {
+      Real d = boost::math::gamma_p_derivative(a, x);
+      nlohmann::json itm;
+      itm["a"] = double(a);
+      itm["x"] = double(x);
+      itm["gamma.lower.norm.derivative"] = double(d);
+      tests.push_back(itm);
     }
-    std::cout << tests << std::endl;
   }
+  std::cout << tests << std::endl;
+}
 
 void main_special_gamma_incomplete() {
   nlohmann::json tests;
@@ -422,6 +437,7 @@ void main_utils_frexp() {
 std::map<std::string, std::function<void()>> dists{
     {"binomial", main_binom},
     {"norm", main_norm},
+    {"special_beta", main_special_beta},
     {"special_erf", main_special_erf},
     {"special_gamma", main_special_gamma},
     {"special_gamma_derivative", main_special_gamma_derivative},
