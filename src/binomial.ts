@@ -1,6 +1,6 @@
 import { Distribution, PdfOptions, CdfOptions, RandomSource } from "./distribution";
 import { logChoose } from "./special/gamma";
-import { logAdd } from "./internal/utils";
+import { logAdd } from "./special/logexp";
 
 export class InversionBinomialRandomGenerator {
   private t: number;

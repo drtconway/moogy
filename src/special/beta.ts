@@ -1,4 +1,4 @@
-import { contFracB, powm1, sumSeries } from "../internal/utils";
+import { contFracB, sumSeries } from "../internal/utils";
 import { domain, OverflowError } from "../internal/checks";
 import {
   choose,
@@ -11,6 +11,7 @@ import {
   regularisedGammaPrefix,
   scaledGamma,
 } from "./gamma";
+import { powm1 } from "./logexp";
 
 const eps = 1e-22;
 const minRec = 20;
