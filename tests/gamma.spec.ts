@@ -12,7 +12,9 @@ describe("gamma distribution special cases", () => {
     let Gam = new Gamma(2, 2);
     it("x = 0.5", () => {
       expect(Gam.pdf(0.5)).toBeRelativelyCloseTo(0.09735009788392562368742);
+      expect(Gam.pdf(0.5, {log: true})).toBeRelativelyCloseTo(-2.329441541679835747658);
       expect(Gam.cdf(0.5)).toBeRelativelyCloseTo(0.02649902116074392618983);
+      expect(Gam.cdf(0.5, {log: true})).toBeRelativelyCloseTo(-3.630647484002578195827);
       expect(Gam.cdf(0.5, { lower: false })).toBeRelativelyCloseTo(0.9735009788392561258519);
     });
     it("x = 2.5", () => {
