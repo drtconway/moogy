@@ -9,6 +9,18 @@ import { kolmogorovSmirnov } from "../src/kolmogorov-smirnov";
 
 const S: number = 0.25;
 
+describe("binomial distribution special cases", () => {
+  it("Bin(50, 0.125)", () => {
+    let Bin = new Binomial(50, 0.125);
+    expect(Bin.pdf(10)).toBeRelativelyCloseTo(0.04582358070337413241679);
+    expect(Bin.pdf(10, {log: true})).toBeRelativelyCloseTo(-3.082956457839142405675);
+    expect(Bin.cdf(10, {lower: true, log: false})).toBeRelativelyCloseTo(0.9579301614190229852142);
+    expect(Bin.cdf(10, {lower: true, log: true})).toBeRelativelyCloseTo(-0.04298040406631911669599);
+    expect(Bin.cdf(10, {lower: false, log: false})).toBeRelativelyCloseTo(0.04206983858097696621359);
+    expect(Bin.cdf(10, {lower: false, log: true})).toBeRelativelyCloseTo(-3.168424218302282824311);
+    });
+});
+
 const tests = JSON.parse(readFileSync("tests/data/binomial.json").toString("utf-8"));
 //const tests = JSON.parse('[]');
 

@@ -43,7 +43,6 @@ describe("chi-squared randoms", () => {
     let NB = new NegativeBinomial(25, 0.25);
     let n = 1000;
     let xs = NB.random(R, n);
-    console.log(JSON.stringify(xs));
     expect(xs.length).toBe(n);
     expect(kolmogorovSmirnov(xs, NB)).toBeLessThan(0.05);
   });

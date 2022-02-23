@@ -2,7 +2,7 @@ import { CdfOptions, Distribution, PdfOptions, RandomSource } from "./distributi
 
 export class Empirical implements Distribution {
   name: string = "empirical";
-  readonly mean : number;
+  readonly mean: number;
   readonly stddev: number;
   private values: number[];
 
@@ -10,34 +10,48 @@ export class Empirical implements Distribution {
     this.values = [...values].sort((a, b) => a - b);
     const n = this.values.length;
     let s = 0;
-    let s2 = 0
+    let s2 = 0;
     for (let x of this.values) {
-        s += x;
-        s2 += x*x;
+      s += x;
+      s2 += x * x;
     }
     this.mean = s / n;
-    this.stddev = Math.sqrt(s2/n - this.mean*this.mean);
+    this.stddev = Math.sqrt(s2 / n - this.mean * this.mean);
   }
 
-  pdf(x: number, options: PdfOptions): number {
+  pdf(x: number, options: PdfOptions = { log: false }): number {
     throw new Error("no pdf method for empirical distributions.");
   }
-  
-  cdf(x: number, options: CdfOptions = {lower: true, log: false}): number {
+
+  cdf(x: number, options: CdfOptions = { lower: true, log: false }): number {
     const n = this.values.length;
 
     if (x < this.values[0]) {
-      if (options.log) {
-        return -Infinity;
+      if (options.lower == undefined || options.lower) {
+        if (options.log) {
+          return -Infinity;
+        }
+        return 0;
+      } else {
+        if (options.log) {
+          return 0;
+        }
+        return 1;
       }
-      return 0;
     }
 
     if (x >= this.values[n - 1]) {
-      if (options.log) {
+      if (options.lower == undefined || options.lower) {
+        if (options.log) {
+          return 0;
+        }
+        return 1;
+      } else {
+        if (options.log) {
+          return -Infinity;
+        }
         return 0;
       }
-      return 1;
     }
     let lo = 0;
     let hi = n - 1;
