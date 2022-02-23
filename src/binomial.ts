@@ -70,12 +70,7 @@ export class RejectionBinomialRandomGenerator {
   }
 
   random(rng: RandomSource): number {
-    let attempts = 0;
     while (true) {
-      attempts += 1;
-      if (attempts > 100) {
-        throw new Error(`rejection method failed after 100 attempts.`);
-      }
       let v = rng.random();
 
       if (v < this.uRvR) {
