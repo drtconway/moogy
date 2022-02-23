@@ -4,10 +4,13 @@ import { addHelpers } from "./helpers";
 addHelpers();
 
 import { readFileSync } from "fs";
+import { MT19937 } from "../src/random";
+import { kolmogorovSmirnov } from "../src/kolmogorov-smirnov";
 
 const S: number = 0.25;
 
 const tests = JSON.parse(readFileSync("tests/data/binomial.json").toString("utf-8"));
+//const tests = JSON.parse('[]');
 
 describe("binomial pdf", () => {
   for (let testGroup of tests) {
@@ -91,3 +94,42 @@ describe("binomial lower cdf", () => {
     }
   }
 });
+
+describe("binomial randoms", () => {
+  it("basic test small m", () => {
+    let R = new MT19937(37);
+    let Bin = new Binomial(80, 0.125);
+    let xs = [];
+    for (let i = 0; i < 1000; ++i) {
+      let u = Bin.random(R);
+      xs.push(u);
+    }
+    expect(kolmogorovSmirnov(xs, Bin)).toBeLessThan(0.135);
+  });
+  it("vector test small m", () => {
+    let R = new MT19937(37);
+    let Bin = new Binomial(80, 0.125);
+    let n = 1000;
+    let xs = Bin.random(R, n);
+    expect(xs.length).toBe(n);
+    expect(kolmogorovSmirnov(xs, Bin)).toBeLessThan(0.135);
+  });
+  it("basic test large m", () => {
+    let R = new MT19937(37);
+    let Bin = new Binomial(800, 0.125);
+    let xs = [];
+    for (let i = 0; i < 1000; ++i) {
+      let u = Bin.random(R);
+      xs.push(u);
+    }
+    expect(kolmogorovSmirnov(xs, Bin)).toBeLessThan(0.125);
+  });
+  it("vector test large m", () => {
+    let R = new MT19937(37);
+    let Bin = new Binomial(800, 0.125);
+    let n = 1000;
+    let xs = Bin.random(R, n);
+    expect(xs.length).toBe(n);
+    expect(kolmogorovSmirnov(xs, Bin)).toBeLessThan(0.125);
+  });
+  });

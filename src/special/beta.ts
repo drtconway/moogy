@@ -350,7 +350,7 @@ function incompleteBetaSmallBLargeASeries(
 
 function binomialCCDF(n: number, k: number, x: number, y: number): number {
   let res = Math.pow(x, n);
-  console.log(`binomialCCDF(${n}, ${k}, ${x}, ${y}): pow(${x}, ${n}) = ${res}, denormal(res) = ${denormal(res)}`);
+  //console.log(`binomialCCDF(${n}, ${k}, ${x}, ${y}): pow(${x}, ${n}) = ${res}, denormal(res) = ${denormal(res)}`);
   if (!denormal(res)) {
     let t = res;
     for (let i = n - 1; i > k; --i) {
@@ -500,16 +500,15 @@ export function incompleteBetaImpl(
       x = y;
       y = t;
       inv = !inv;
-      console.log(`swapped 1: a=${a}, b=${b}, x=${x}, y=${y}, inv=${inv}`);
     }
 
     if (Math.max(a, b) <= 1) {
       if (a >= Math.min(0.2, b) || Math.pow(x, a) < 0.9) {
         if (!inv) {
-          console.log(`case 1a`);
+          //console.log(`case 1a`);
           frac = incompleteBetaSeries(a, b, x, 0, norm, y, deriv);
         } else {
-          console.log(`case 1b`);
+          //console.log(`case 1b`);
           frac = norm ? -1 : -beta(a, b);
           inv = false;
           frac = -incompleteBetaSeries(a, b, x, frac, norm, y, deriv);
@@ -525,13 +524,13 @@ export function incompleteBetaImpl(
         x = y;
         y = t;
         inv = !inv;
-        console.log(`swapped 2: a=${a}, b=${b}, x=${x}, y=${y}, inv=${inv}`);
+        //console.log(`swapped 2: a=${a}, b=${b}, x=${x}, y=${y}, inv=${inv}`);
         if (y >= 0.3) {
           if (!inv) {
-            console.log(`case 2a`);
+            //console.log(`case 2a`);
             frac = incompleteBetaSeries(a, b, x, 0, norm, y, deriv);
           } else {
-            console.log(`case 2b`);
+            //console.log(`case 2b`);
             frac = norm ? -1 : -beta(a, b);
             inv = false;
             frac = -incompleteBetaSeries(a, b, x, frac, norm, y, deriv);
@@ -545,10 +544,10 @@ export function incompleteBetaImpl(
           }
           frac = incompleteBetaAStep(a, b, x, y, 20, norm, deriv);
           if (!inv) {
-            console.log(`case 3a`);
+            //console.log(`case 3a`);
             frac = incompleteBetaSmallBLargeASeries(a + 20, b, x, y, frac, pfx, norm);
           } else {
-            console.log(`case 3b`);
+            //console.log(`case 3b`);
             frac -= norm ? 1 : beta(a, b);
             inv = false;
             frac = -incompleteBetaSmallBLargeASeries(a + 20, b, x, y, frac, pfx, norm);
@@ -558,10 +557,10 @@ export function incompleteBetaImpl(
     } else {
       if (b <= 1 || (x < 0.1 && Math.pow(b * x, a) <= 0.7)) {
         if (!inv) {
-          console.log(`case 4a`);
+          //console.log(`case 4a`);
           frac = incompleteBetaSeries(a, b, x, 0, norm, y, deriv);
         } else {
-          console.log(`case 4b`);
+          //console.log(`case 4b`);
           frac = norm ? -1 : -beta(a, b);
           inv = false;
           frac = -incompleteBetaSeries(a, b, x, frac, norm, y, deriv);
@@ -580,20 +579,20 @@ export function incompleteBetaImpl(
 
         if (y >= 0.3) {
           if (!inv) {
-            console.log(`case 5a`);
+            //console.log(`case 5a`);
             frac = incompleteBetaSeries(a, b, x, 0, norm, y, deriv);
           } else {
-            console.log(`case 5b`);
+            //console.log(`case 5b`);
             frac = norm ? -1 : -beta(a, b);
             inv = false;
             frac = -incompleteBetaSeries(a, b, x, frac, norm, y, deriv);
           }
         } else if (a >= 15) {
           if (!inv) {
-            console.log(`case 6a`);
+            //console.log(`case 6a`);
             frac = incompleteBetaSmallBLargeASeries(a, b, x, y, 0, 1, norm);
           } else {
-            console.log(`case 6b`);
+            //console.log(`case 6b`);
             frac = norm ? -1 : -beta(a, b);
             inv = false;
             frac = -incompleteBetaSmallBLargeASeries(a, b, x, y, frac, 1, norm);
@@ -607,10 +606,10 @@ export function incompleteBetaImpl(
           }
           frac = incompleteBetaAStep(a, b, x, y, 20, norm, deriv);
           if (!inv) {
-            console.log(`case 7a`);
+            //console.log(`case 7a`);
             frac = incompleteBetaSmallBLargeASeries(a + 20, b, x, y, frac, pfx, norm);
           } else {
-            console.log(`case 7b`);
+            //console.log(`case 7b`);
             frac -= norm ? 1 : beta(a, b);
             inv = false;
             frac = -incompleteBetaSmallBLargeASeries(a + 20, b, x, y, frac, pfx, norm);
@@ -638,10 +637,10 @@ export function incompleteBetaImpl(
       inv = !inv;
     }
 
-    console.log(`a=${a}, b=${b}, x=${x}, y=${y}, inv=${inv}`);
+    //console.log(`a=${a}, b=${b}, x=${x}, y=${y}, inv=${inv}`);
     if (b < 40) {
       if (Math.floor(a) == a && Math.floor(b) == b && a < Number.MAX_VALUE - 100 && y != 1) {
-        console.log(`case 8`);
+        //console.log(`case 8`);
         let k = a - 1;
         let n = b + k;
         frac = binomialCCDF(n, k, x, y);
@@ -650,16 +649,16 @@ export function incompleteBetaImpl(
         }
       } else if (b * x < 0.7) {
         if (!inv) {
-          console.log(`case 9a`);
+          //console.log(`case 9a`);
           frac = incompleteBetaSeries(a, b, x, 0, norm, y, deriv);
         } else {
-          console.log(`case 9b`);
+          //console.log(`case 9b`);
           frac = norm ? -1 : -beta(a, b);
           inv = false;
           frac = -incompleteBetaSeries(a, b, x, frac, norm, y, deriv);
         }
       } else if (a > 15) {
-        console.log(`case 10`);
+        //console.log(`case 10`);
         let n = Math.floor(b);
         if (n == b) {
           n -= 1;
@@ -675,7 +674,7 @@ export function incompleteBetaImpl(
         frac = incompleteBetaSmallBLargeASeries(a, bbar, x, y, frac, 1, norm);
         frac /= pfx;
       } else if (norm) {
-        console.log(`case 11`);
+        //console.log(`case 11`);
         let n = Math.floor(b);
         let bbar = b - n;
         if (bbar <= 0) {
@@ -693,11 +692,11 @@ export function incompleteBetaImpl(
           inv = false;
         }
       } else {
-        console.log(`case 12`);
+        //console.log(`case 12`);
         frac = incompleteBetaFraction(a, b, x, y, norm, deriv);
       }
     } else {
-      console.log(`case 13`);
+      //console.log(`case 13`);
       frac = incompleteBetaFraction(a, b, x, y, norm, deriv);
     }
   }
