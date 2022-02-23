@@ -11,8 +11,10 @@ describe("basic tests for negative binomial", () => {
   let NB = new NegativeBinomial(4, 0.25);
   it("pdf", () => {
     expect(NB.pdf(7)).toBeRelativelyCloseTo(0.0625705718994140625);
+    expect(NB.pdf(7, {log: true})).toBeRelativelyCloseTo(-2.771460208859982898844);
     expect(NB.pdf(25)).toBeRelativelyCloseTo(0.009630204566205240526711);
-  });
+    expect(NB.pdf(25, {log: true})).toBeRelativelyCloseTo(-4.64285081080112504992);
+});
   it("cdf", () => {
     expect(NB.cdf(7, { lower: true, log: false })).toBeRelativelyCloseTo(0.2866954803466797985223);
     expect(NB.cdf(7, { lower: true, log: true })).toBeRelativelyCloseTo(-1.249334670616514930686);
