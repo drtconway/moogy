@@ -1,4 +1,4 @@
-import { beta, incompleteBeta } from "../src/special/beta";
+import { beta, incompleteBeta, incompleteBetaDerivative } from "../src/special/beta";
 
 import { addHelpers } from "./helpers";
 addHelpers();
@@ -28,6 +28,7 @@ describe("beta special cases", () => {
 });
 
 import { readFileSync } from "fs";
+import { isRegExp } from "util/types";
 
 const betaTests = JSON.parse(readFileSync("tests/data/special.beta.json").toString("utf-8"));
 
@@ -45,6 +46,12 @@ describe("incomplete beta special cases", () => {
     });
     it("incompleteBeta(5000, 1, 0.98, {lower: false, normalised: true}) = 1", () => {
         expect(incompleteBeta(5000, 1, 0.98, {lower: false, normalised: true})).toBeRelativelyCloseTo(1);
+    });
+    it("incomplete beta with derivative", () => {
+      let deriv = {value: 0};
+      let p = incompleteBeta(3, 4, 0.125, {derivative: deriv});
+      expect(p).toBeRelativelyCloseTo(0.029136657714843767);
+      expect(deriv.value).toBeRelativelyCloseTo(0.62805175781250011);
     });
 });
 
@@ -84,4 +91,22 @@ describe("incomplete beta parameter sweep", () => {
       }
     });
   }
+});
+
+describe("derivative of incomplete beta", () => {
+  it("incompleteBetaDerivative(3, 4, 0) = 0", () => {
+    expect(incompleteBetaDerivative(3, 4, 0)).toBe(0);
+  });
+  it("incompleteBetaDerivative(1, 4, 0) = 4", () => {
+    expect(incompleteBetaDerivative(1, 4, 0)).toBe(4);
+  });
+  it("incompleteBetaDerivative(3, 4, 0.2) = 1.2288", () => {
+    expect(incompleteBetaDerivative(3, 4, 0.2)).toBeRelativelyCloseTo(1.2288);
+  });
+  it("incompleteBetaDerivative(3, 4, 1) = 0", () => {
+    expect(incompleteBetaDerivative(3, 4, 1)).toBe(0);
+  });
+  it("incompleteBetaDerivative(3, 1, 1) = 3", () => {
+    expect(incompleteBetaDerivative(3, 1, 1)).toBe(3);
+  });
 });

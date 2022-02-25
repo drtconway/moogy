@@ -722,6 +722,7 @@ export function incompleteBetaImpl(
 export interface IncompleteBetaOptions {
   lower?: boolean;
   normalised?: boolean;
+  derivative?: {value: number};
 }
 
 export function incompleteBeta(a: number, b: number, x: number, options?: IncompleteBetaOptions): number {
@@ -733,7 +734,11 @@ export function incompleteBeta(a: number, b: number, x: number, options?: Incomp
   if (options && options.normalised != undefined) {
     norm = options.normalised;
   }
-  return incompleteBetaImpl(a, b, x, inv, norm);
+  let deriv = undefined;
+  if (options && options.derivative) {
+    deriv = options.derivative;
+  }
+  return incompleteBetaImpl(a, b, x, inv, norm, deriv);
 }
 
 export function incompleteBetaDerivative(a: number, b: number, x: number): number {
@@ -751,7 +756,7 @@ export function incompleteBetaDerivative(a: number, b: number, x: number): numbe
     throw new OverflowError(`incompleteBetaDerivative(${a}, ${b}, ${x})`);
   }
   if (x == 1) {
-    if (b > 0) {
+    if (b > 1) {
       return 0;
     }
     if (b == 1) {
