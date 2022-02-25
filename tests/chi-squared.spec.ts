@@ -37,7 +37,6 @@ describe("chi-squared randoms", () => {
       let CS = new ChiSquared(3);
       let n = 1000;
       let xs = CS.random(R, n);
-      console.log(JSON.stringify(xs))
       expect(xs.length).toBe(n);
       expect(kolmogorovSmirnov(xs, CS)).toBeLessThan(0.125);
     });
