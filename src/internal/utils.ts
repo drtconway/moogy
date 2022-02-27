@@ -284,3 +284,19 @@ export function cosPi(x: number): number {
   }
   return inv ? -rem : rem;
 }
+
+export class CodePathCapture {
+  saved: { [key: string]: {count: number, value: any}} = {};
+
+  capture(key: string, value: any) : void {
+    if (!(key in this.saved)) {
+      this.saved[key] = {count: 1, value};
+      return;
+    }
+    let item = this.saved[key];
+    item.count += 1;
+    if (Math.random() < 1/item.count) {
+      item.value = value;
+    }
+  }
+}
