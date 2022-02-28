@@ -9,6 +9,7 @@ import { MT19937 } from "../../../src/random";
 import { RandomSource } from "../../../src/distribution";
 import { Poisson } from "../../../src/poisson";
 import { writeFileSync } from "fs";
+import { CoverageCapture } from "../../../src/internal/capture";
 
 function param(rng: RandomSource): number {
   let scales: number[] = [0.01, 0.1, 0.1, 1, 10, 100];
@@ -21,51 +22,38 @@ function param(rng: RandomSource): number {
   return x;
 }
 
-function callIncompleteBeta(
+async function callIncompleteBeta(cap: CoverageCapture,
   a: number,
   b: number,
   x: number,
   options: IncompleteBetaOptions
 ) {
-  try {
+  const memento = {a, b, x, inv: !options.lower, norm: options.normalised, deriv: options.derivative != undefined};
+  await cap.capture(memento, () => {
     incompleteBeta(a, b, x, options);
-  } catch (err) {
-    // never mind.
-  }
+  });
 }
 
-function runForParams(a: number, b: number, x0: number): void {
+const lowerNorm : IncompleteBetaOptions = {lower: true, normalised: true};
+const lowerNormDeriv : IncompleteBetaOptions = {lower: true, normalised: true, derivative: {value: 0}};
+const lower : IncompleteBetaOptions = {lower: true};
+const lowerDeriv : IncompleteBetaOptions = {lower: true, derivative: {value: 0}};
+const upperNorm : IncompleteBetaOptions = {lower: false, normalised: true};
+const upperNormDeriv : IncompleteBetaOptions = {lower: false, normalised: true, derivative: {value: 0}};
+const upper : IncompleteBetaOptions = {lower: false};
+const upperDeriv : IncompleteBetaOptions = {lower: false, derivative: {value: 0}};
+
+async function runForParams(cap: CoverageCapture, a: number, b: number, x0: number): Promise<void> {
   for (let x of [x0, 1 - x0, 0, 1]) {
-    let deriv = { value: 0 };
-    callIncompleteBeta(a, b, x, { lower: true, normalised: true });
-    callIncompleteBeta(a, b, x, {
-      lower: true,
-      normalised: true,
-      derivative: deriv,
-    });
-    callIncompleteBeta(a, b, x, { lower: true, normalised: false });
-    callIncompleteBeta(a, b, x, {
-      lower: true,
-      normalised: false,
-      derivative: deriv,
-    });
-    callIncompleteBeta(a, b, x, { lower: false, normalised: true });
-    callIncompleteBeta(a, b, x, {
-      lower: false,
-      normalised: true,
-      derivative: deriv,
-    });
-    callIncompleteBeta(a, b, x, { lower: false, normalised: false });
-    callIncompleteBeta(a, b, x, {
-      lower: false,
-      normalised: false,
-      derivative: deriv,
-    });
+    for (let opts of [lowerNorm, lowerNormDeriv, lower, lowerDeriv, upperNorm, upperNormDeriv, upper, upperDeriv]) {
+      await callIncompleteBeta(cap, a, b, x, opts);
+    }
   }
 }
 
-function main() {
-  const N = 10000;
+async function main() {
+  const cap = new CoverageCapture(4);
+  const N = 1000;
   let R = new MT19937(37);
   let poi = new Poisson(1);
   for (let i = 0; i < N; ++i) {
@@ -76,29 +64,17 @@ function main() {
     for (let j = 0; j < k; ++j) {
       x *= R.random();
     }
-    runForParams(0, b, x);
-    runForParams(1, b, x);
-    runForParams(a, 0, x);
-    runForParams(a, 1, x);
-    runForParams(0.5, 0.5, x);
-    runForParams(a, b, x);
+    console.log(`i=${i}, a=${a}, b=${b}, x=${x}`)
+    await runForParams(cap, 0, b, x);
+    await runForParams(cap, 1, b, x);
+    await runForParams(cap, a, 0, x);
+    await runForParams(cap, a, 1, x);
+    await runForParams(cap, 0.5, 0.5, x);
+    await runForParams(cap, a, b, x);
   }
-  let covered = [];
-  let collected: { [key: string]: any } = {};
-  for (let key in codePaths.saved) {
-    covered.push(key);
-    let item = {...codePaths.saved[key].value["beta"], path: key};
-    let s = JSON.stringify(item);
-    collected[s] = item;
-  }
-  let res = [];
-  for (let key in collected) {
-    res.push(collected[key]);
-  }
-  writeFileSync("utils/reference/data/beta.json", JSON.stringify(res));
-  covered.sort();
-  console.log(JSON.stringify(covered));
-  console.log(covered.length);
+  let res = cap.summarise();
+  console.log(`paths covered: ${res[0]}`);
+  writeFileSync("utils/reference/data/beta.json", JSON.stringify(res[2]));
 }
 
 main()

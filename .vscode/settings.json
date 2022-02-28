@@ -1,3 +1,6 @@
 {
-    "cmake.sourceDirectory": "${workspaceFolder}/utils/reference"
+    "cmake.sourceDirectory": "${workspaceFolder}/utils/reference",
+    "cSpell.words": [
+        "Instrumenter"
+    ]
 }

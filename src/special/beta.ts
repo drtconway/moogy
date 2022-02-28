@@ -408,14 +408,14 @@ export function incompleteBetaImpl(
       if (deriv) {
         deriv.value = 0;
       }
-      return inv ? 0 : 1;
+      return inv ? (x > 0 ? 0 : 1) : (x > 0 ? 1 : 0);
     }
     if (b == 0) {
       //codePaths.capture("beta 02", memento);
       if (deriv) {
         deriv.value = 0;
       }
-      return inv ? 1 : 0;
+      return inv ? (x < 1 ? 1 : 0) : (x < 1 ? 0 : 1);
     }
   } else {
     domain(a, { greaterThan: 0 });
