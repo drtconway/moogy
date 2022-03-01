@@ -1,4 +1,4 @@
-import { contFracB, sumSeries, CodePathCapture } from "../internal/utils";
+import { contFracB, sumSeries } from "../internal/utils";
 import { domain, DomainError, OverflowError } from "../internal/checks";
 import {
   choose,
@@ -12,8 +12,6 @@ import {
   scaledGamma,
 } from "./gamma";
 import { powm1 } from "./logexp";
-
-export const codePaths = new CodePathCapture();
 
 const eps = 1e-22;
 const minRec = 20;
@@ -395,7 +393,6 @@ export function incompleteBetaImpl(
   norm: boolean,
   deriv?: { value: number }
 ): number {
-  //const memento = {beta: {a, b, x, inv, norm, deriv: (deriv != undefined)}}
   domain(x, { greaterThanOrEqual: 0, lessThanOrEqual: 1 });
   if (norm) {
     domain(a, { greaterThanOrEqual: 0 });
@@ -404,14 +401,12 @@ export function incompleteBetaImpl(
       throw new Error(`incompleteBetaImpl(${a}, ${b}, ${x}): a or b must be > 0`);
     }
     if (a == 0) {
-      //codePaths.capture("beta 01", memento);
       if (deriv) {
         deriv.value = 0;
       }
       return inv ? (x > 0 ? 0 : 1) : (x > 0 ? 1 : 0);
     }
     if (b == 0) {
-      //codePaths.capture("beta 02", memento);
       if (deriv) {
         deriv.value = 0;
       }
@@ -432,46 +427,35 @@ export function incompleteBetaImpl(
   }
 
   if (x == 0) {
-    //codePaths.capture("beta 03", memento);
     if (deriv) {
       if (a == 1) {
-        //codePaths.capture("beta 03a", memento);
         deriv.value = 1;
       } else if (a < 1) {
-        //codePaths.capture("beta 03b", memento);
         deriv.value = Number.MAX_VALUE / 2;
       } else {
-        //codePaths.capture("beta 03c", memento);
         deriv.value = Number.MIN_VALUE * 2;
       }
     }
     return inv ? (norm ? 1 : beta(a, b)) : 0;
   }
   if (x == 1) {
-    //codePaths.capture("beta 04", memento);
     if (deriv) {
       if (b == 1) {
-        //codePaths.capture("beta 04a", memento);
         deriv.value = 1;
       } else if (b < 1) {
-        //codePaths.capture("beta 04b", memento);
         deriv.value = Number.MAX_VALUE / 2;
       } else {
-        //codePaths.capture("beta 04c", memento);
         deriv.value = Number.MIN_VALUE * 2;
       }
     }
     return !inv ? (norm ? 1 : beta(a, b)) : 0;
   }
   if (a == 0.5 && b == 0.5) {
-    //codePaths.capture("beta 05", memento);
     if (deriv) {
-      //codePaths.capture("beta 05a", memento);
       deriv.value = (1 / Math.PI) * Math.sqrt(y * x);
     }
     let p = inv ? Math.asin(Math.sqrt(y)) / halfPi : Math.asin(Math.sqrt(x)) / halfPi;
     if (!norm) {
-      //codePaths.capture("beta 05b", memento);
       p *= Math.PI;
     }
     return p;
@@ -492,29 +476,22 @@ export function incompleteBetaImpl(
 
   if (b == 1) {
     if (a == 1) {
-      //codePaths.capture("beta 06", memento);
       if (deriv) {
-        //codePaths.capture("beta 06a", memento);
         deriv.value = 1;
       }
       return inv ? y : x;
     }
 
-    //codePaths.capture("beta 07", memento);
     if (deriv) {
-      //codePaths.capture("beta 07a", memento);
       deriv.value = a * Math.pow(x, a - 1);
     }
     let p;
     if (y < 0.5) {
-      //codePaths.capture("beta 07b", memento);
       p = inv ? -Math.expm1(a * Math.log1p(-y)) : Math.exp(a * Math.log1p(-y));
     } else {
-      //codePaths.capture("beta 07c", memento);
       p = inv ? -powm1(x, a) : Math.pow(x, a);
     }
     if (!norm) {
-      //codePaths.capture("beta 07d", memento);
       p /= a;
     }
     return p;
@@ -538,10 +515,8 @@ export function incompleteBetaImpl(
     if (Math.max(a, b) <= 1) {
       if (a >= Math.min(0.2, b) || Math.pow(x, a) < 0.9) {
         if (!inv) {
-          //codePaths.capture("beta 08", memento);
           frac = incompleteBetaSeries(a, b, x, 0, norm, y, deriv);
         } else {
-          //codePaths.capture("beta 09", memento);
           frac = norm ? -1 : -beta(a, b);
           inv = false;
           frac = -incompleteBetaSeries(a, b, x, frac, norm, y, deriv);
@@ -559,10 +534,8 @@ export function incompleteBetaImpl(
         inv = !inv;
         if (y >= 0.3) {
           if (!inv) {
-            //codePaths.capture("beta 10", memento);
             frac = incompleteBetaSeries(a, b, x, 0, norm, y, deriv);
           } else {
-            //codePaths.capture("beta 11", memento);
             frac = norm ? -1 : -beta(a, b);
             inv = false;
             frac = -incompleteBetaSeries(a, b, x, frac, norm, y, deriv);
@@ -570,18 +543,14 @@ export function incompleteBetaImpl(
         } else {
           let pfx;
           if (!norm) {
-            //codePaths.capture("beta 12a", memento);
             pfx = risingFactorialRatio(a + b, a, 20);
           } else {
-            //codePaths.capture("beta 12b", memento);
             pfx = 1;
           }
           frac = incompleteBetaAStep(a, b, x, y, 20, norm, deriv);
           if (!inv) {
-            //codePaths.capture("beta 13a", memento);
             frac = incompleteBetaSmallBLargeASeries(a + 20, b, x, y, frac, pfx, norm);
           } else {
-            //codePaths.capture("beta 13b", memento);
             frac -= norm ? 1 : beta(a, b);
             inv = false;
             frac = -incompleteBetaSmallBLargeASeries(a + 20, b, x, y, frac, pfx, norm);
@@ -591,10 +560,8 @@ export function incompleteBetaImpl(
     } else {
       if (b <= 1 || (x < 0.1 && Math.pow(b * x, a) <= 0.7)) {
         if (!inv) {
-          //codePaths.capture("beta 14a", memento);
           frac = incompleteBetaSeries(a, b, x, 0, norm, y, deriv);
         } else {
-          //codePaths.capture("beta 14b", memento);
           frac = norm ? -1 : -beta(a, b);
           inv = false;
           frac = -incompleteBetaSeries(a, b, x, frac, norm, y, deriv);
@@ -613,20 +580,16 @@ export function incompleteBetaImpl(
 
         if (y >= 0.3) {
           if (!inv) {
-            //codePaths.capture("beta 15a", memento);
             frac = incompleteBetaSeries(a, b, x, 0, norm, y, deriv);
           } else {
-            //codePaths.capture("beta 15b", memento);
             frac = norm ? -1 : -beta(a, b);
             inv = false;
             frac = -incompleteBetaSeries(a, b, x, frac, norm, y, deriv);
           }
         } else if (a >= 15) {
           if (!inv) {
-            //codePaths.capture("beta 16a", memento);
             frac = incompleteBetaSmallBLargeASeries(a, b, x, y, 0, 1, norm);
           } else {
-            //codePaths.capture("beta 16b", memento);
             frac = norm ? -1 : -beta(a, b);
             inv = false;
             frac = -incompleteBetaSmallBLargeASeries(a, b, x, y, frac, 1, norm);
@@ -634,18 +597,14 @@ export function incompleteBetaImpl(
         } else {
           let pfx;
           if (!norm) {
-            //codePaths.capture("beta 17a", memento);
             pfx = risingFactorialRatio(a + b, a, 20);
           } else {
-            //codePaths.capture("beta 17b", memento);
             pfx = 1;
           }
           frac = incompleteBetaAStep(a, b, x, y, 20, norm, deriv);
           if (!inv) {
-            //codePaths.capture("beta 18a", memento);
             frac = incompleteBetaSmallBLargeASeries(a + 20, b, x, y, frac, pfx, norm);
           } else {
-            //codePaths.capture("beta 18b", memento);
             frac -= norm ? 1 : beta(a, b);
             inv = false;
             frac = -incompleteBetaSmallBLargeASeries(a + 20, b, x, y, frac, pfx, norm);
@@ -656,14 +615,11 @@ export function incompleteBetaImpl(
   } else {
     let lam;
     if (a < b) {
-      //codePaths.capture("beta 19a", memento);
       lam = a - (a + b) * x;
     } else {
-      //codePaths.capture("beta 19b", memento);
       lam = (a + b) * y - b;
     }
     if (lam < 0) {
-      //codePaths.capture("beta 19c", memento);
       // swap a <-> b
       //      x <-> y
       // flip inv
@@ -679,87 +635,70 @@ export function incompleteBetaImpl(
     //console.log(`a=${a}, b=${b}, x=${x}, y=${y}, inv=${inv}`);
     if (b < 40) {
       if (Math.floor(a) == a && Math.floor(b) == b && a < Number.MAX_VALUE - 100 && y != 1) {
-        //codePaths.capture("beta 20", memento);
         let k = a - 1;
         let n = b + k;
         frac = binomialCCDF(n, k, x, y);
         if (!norm) {
-          //codePaths.capture("beta 20a", memento);
           frac *= beta(a, b);
         }
       } else if (b * x < 0.7) {
         if (!inv) {
-          //codePaths.capture("beta 21a", memento);
           frac = incompleteBetaSeries(a, b, x, 0, norm, y, deriv);
         } else {
-          //codePaths.capture("beta 21b", memento);
           frac = norm ? -1 : -beta(a, b);
           inv = false;
           frac = -incompleteBetaSeries(a, b, x, frac, norm, y, deriv);
         }
       } else if (a > 15) {
-        //codePaths.capture("beta 22", memento);
         let n = Math.floor(b);
         if (n == b) {
-          //codePaths.capture("beta 22a", memento);
           n -= 1;
         }
         let bbar = b - n;
         let pfx;
         if (!norm) {
-          //codePaths.capture("beta 22b", memento);
           pfx = risingFactorialRatio(a + bbar, bbar, n);
         } else {
-          //codePaths.capture("beta 22c", memento);
           pfx = 1;
         }
         frac = incompleteBetaAStep(bbar, a, y, x, n, norm);
         frac = incompleteBetaSmallBLargeASeries(a, bbar, x, y, frac, 1, norm);
         frac /= pfx;
       } else if (norm) {
-        //codePaths.capture("beta 23", memento);
         let n = Math.floor(b);
         let bbar = b - n;
         if (bbar <= 0) {
-          //codePaths.capture("beta 23a", memento);
           n -= 1;
           bbar += 1;
         }
         frac = incompleteBetaAStep(bbar, a, y, x, n, norm);
         frac += incompleteBetaAStep(a, bbar, x, y, 20, norm);
         if (inv) {
-          //codePaths.capture("beta 23b", memento);
           frac -= 1;
         }
         frac = incompleteBetaSmallBLargeASeries(a + 20, bbar, x, y, frac, 1, norm);
         if (inv) {
-          //codePaths.capture("beta 23c", memento);
           frac = -frac;
           inv = false;
         }
       } else {
-        //codePaths.capture("beta 24", memento);
         frac = incompleteBetaFraction(a, b, x, y, norm, deriv);
       }
     } else {
-      //codePaths.capture("beta 25", memento);
       frac = incompleteBetaFraction(a, b, x, y, norm, deriv);
     }
   }
 
   if (deriv) {
     if (deriv.value < 0) {
-      //codePaths.capture("beta 26a", memento);
       deriv.value = incompleteBetaPowerTerms(a, b, x, y, true);
     }
     let div = y * x;
 
     if (deriv.value != 0) {
       if (Number.MAX_VALUE * div < deriv.value) {
-        //codePaths.capture("beta 26b", memento);
         deriv.value = Number.MAX_VALUE / 2;
       } else {
-        //codePaths.capture("beta 26c", memento);
         deriv.value /= div;
       }
     }
