@@ -1,8 +1,5 @@
 import {
-  beta,
-  codePaths,
   incompleteBeta,
-  incompleteBetaDerivative,
   IncompleteBetaOptions,
 } from "../../../src/special/beta";
 import { MT19937 } from "../../../src/random";

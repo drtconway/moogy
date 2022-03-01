@@ -23,6 +23,12 @@ if (opts$distribution == "beta") {
     x[, p := mapply(f, a, b, x, inv)];
     x[norm==FALSE, p := p * beta(a, b)];
     x[, q := dbeta(x, a, b)];
+} else if (opts$distribution == "gamma") {
+    # Urk! R doesn't allow for lower.tail to be a vector
+    # so, we have to use mapply:
+    f <- function(a, x, inv) pgamma(x, a, lower.tail=!inv);
+    x[, p := mapply(f, a, x, inv)];
+    x[norm==FALSE, p := p * gamma(a)];
 } else {
     stop("unknwon distribution")
 }
