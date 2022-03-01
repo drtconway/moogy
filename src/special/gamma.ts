@@ -1,8 +1,6 @@
 import { B2n, contFracA, ldexp, maxB2n, poly, sumSeries } from "../internal/utils";
-import { DomainCriteria, domain, OverflowError } from "../internal/checks";
+import { domain, OverflowError } from "../internal/checks";
 import { erfc } from "./erf";
-import { polygamma } from "./polygamma";
-import { isNativeError } from "util/types";
 import { log1pmx, powm1 } from "./logexp";
 
 const eps = 1e-20;
